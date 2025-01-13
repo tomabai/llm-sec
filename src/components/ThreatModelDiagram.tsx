@@ -1,0 +1,387 @@
+'use client'
+
+import React from 'react'
+import { Bot, File, Database, Server, Shield, Globe, Code } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+
+interface Node {
+    id: string
+    type: string
+    label: string
+    icon?: any
+    color?: string
+    size?: number
+}
+
+interface Edge {
+    from: string
+    to: string
+    label?: string
+    dashed?: boolean
+}
+
+interface ThreatModelProps {
+    onVulnerabilityClick?: (vulnerability: any) => void
+}
+
+const nodes: Node[] = [
+    { id: 'client', type: 'entity', label: 'Client/Malicious Actor', icon: Globe, color: '#00ffff', size: 60 },
+    { id: 'inference', type: 'service', label: 'Ingress', icon: Bot, color: '#3b82f6', size: 50 },
+    { id: 'llm_service', type: 'service', label: 'LLM Service', icon: Server, color: '#ff00ff', size: 60 },
+    { id: 'vector_db', type: 'storage', label: 'Vector DB', icon: Database, color: '#22c55e', size: 50 },
+    { id: 'training', type: 'service', label: 'Training Pipeline', icon: Code, color: '#eab308', size: 50 },
+    { id: 'security', type: 'service', label: 'Security Layer', icon: Shield, color: '#ef4444', size: 40 }
+]
+
+const edges: Edge[] = [
+    { from: 'client', to: 'inference', label: 'Input' },
+    { from: 'inference', to: 'llm_service', label: 'Query' },
+    { from: 'llm_service', to: 'vector_db', label: 'Retrieval' },
+    { from: 'llm_service', to: 'training', label: 'Fine-tuning', dashed: true },
+    { from: 'security', to: 'inference', dashed: true }
+]
+
+const vulnerabilities = [
+    {
+        id: 'LLM01',
+        title: 'Prompt Injection',
+        description: 'Manipulating LLMs via crafted inputs can lead to unauthorized access, data breaches, and compromised decision-making.',
+        position: { node: 'client', offset: { x: -150, y: -60 } },
+        color: '#00ffff',
+        path: '/labs/prompt-injection'
+    },
+    {
+        id: 'LLM02',
+        title: 'Insecure Output Handling',
+        description: 'Neglecting to validate LLM outputs may lead to downstream security exploits, including code execution that compromises systems and exposes data.',
+        position: { node: 'llm_service', offset: { x: 280, y: -120 } },
+        color: '#ff00ff',
+        path: '/labs/insecure-output'
+    },
+    {
+        id: 'LLM03',
+        title: 'Training Data Poisoning',
+        description: 'Tampered training data can impair LLM models leading to responses that may compromise security, accuracy, or ethical behavior.',
+        position: { node: 'training', offset: { x: -280, y: 100 } },
+        color: '#eab308',
+        path: '/labs/data-poisoning'
+    },
+    {
+        id: 'LLM04',
+        title: 'Model Denial of Service',
+        description: 'Overloading LLMs with resource-heavy operations can cause service disruptions and increased costs.',
+        position: { node: 'client', offset: { x: -150, y: 140 } },
+        color: '#00ffff',
+        path: '/labs/denial-of-service'
+    },
+    {
+        id: 'LLM05',
+        title: 'Supply Chain Vulnerabilities',
+        description: 'Depending upon compromised components, services or datasets undermine system integrity, causing data breaches and system failures.',
+        position: { node: 'training', offset: { x: -280, y: -100 } },
+        color: '#eab308',
+        path: '/labs/supply-chain'
+    },
+    {
+        id: 'LLM06',
+        title: 'Sensitive Information Disclosure',
+        description: 'Failure to protect against disclosure of sensitive information in LLM outputs can result in legal consequences or a loss of competitive advantage.',
+        position: { node: 'llm_service', offset: { x: 280, y: 120 } },
+        color: '#ff00ff',
+        path: '/labs/info-disclosure'
+    },
+    {
+        id: 'LLM07',
+        title: 'Insecure Plugin Design',
+        description: 'LLM plugins processing untrusted inputs and having insufficient access control risk severe exploits like remote code execution.',
+        position: { node: 'vector_db', offset: { x: 200, y: 100 } },
+        color: '#22c55e',
+        path: '/labs/insecure-plugins'
+    },
+    {
+        id: 'LLM08',
+        title: 'Excessive Agency',
+        description: 'Granting LLMs unchecked autonomy to take action can lead to unintended consequences, jeopardizing reliability, privacy, and trust.',
+        position: { node: 'security', offset: { x: -250, y: -60 } },
+        color: '#ef4444',
+        path: '/labs/excessive-agency'
+    },
+    {
+        id: 'LLM09',
+        title: 'Overreliance',
+        description: 'Failing to critically assess LLM outputs can lead to compromised decision making, security vulnerabilities, and legal liabilities.',
+        position: { node: 'inference', offset: { x: 280, y: -60 } },
+        color: '#3b82f6',
+        path: '/labs/overreliance'
+    },
+    {
+        id: 'LLM10',
+        title: 'Model Theft',
+        description: 'Unauthorized access to proprietary large language models risks theft, competitive advantage, and dissemination of sensitive information.',
+        position: { node: 'llm_service', offset: { x: 0, y: 200 } },
+        color: '#ff00ff',
+        path: '/labs/model-theft'
+    }
+]
+
+export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
+    const router = useRouter()
+    const [hoveredVuln, setHoveredVuln] = React.useState<string | null>(null)
+    const [hoveredNode, setHoveredNode] = React.useState<string | null>(null)
+    const svgRef = React.useRef<SVGSVGElement>(null)
+    const [nodePositions, setNodePositions] = React.useState<{ [key: string]: { x: number, y: number } }>({
+        client: { x: 450, y: 50 },
+        inference: { x: 450, y: 230 },
+        llm_service: { x: 450, y: 400 },
+        vector_db: { x: 700, y: 400 },
+        training: { x: 200, y: 450 },
+        security: { x: 200, y: 250 }
+    })
+
+    const getEdgePath = (from: string, to: string) => {
+        const start = nodePositions[from]
+        const end = nodePositions[to]
+        if (!start || !end) return ''
+
+        const dx = end.x - start.x
+        const dy = end.y - start.y
+        const length = Math.sqrt(dx * dx + dy * dy)
+
+        // Adjust start and end points to start/end at node boundaries
+        const startRatio = 30 / length
+        const endRatio = 30 / length
+        const startX = start.x + dx * startRatio
+        const startY = start.y + dy * startRatio
+        const endX = end.x - dx * endRatio
+        const endY = end.y - dy * endRatio
+
+        // Create curved paths with more pronounced curves
+        const midX = (startX + endX) / 2
+        const midY = (startY + endY) / 2
+        const curviness = 40
+        const controlX = midX - curviness * (endY - startY) / length
+        const controlY = midY + curviness * (endX - startX) / length
+
+        return `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`
+    }
+
+    const getVulnerabilityConnector = (nodePos: { x: number, y: number }, vulnOffset: { x: number, y: number }) => {
+        const endX = nodePos.x + vulnOffset.x
+        const endY = nodePos.y + vulnOffset.y
+
+        // Calculate control points for curved line
+        const dx = vulnOffset.x
+        const dy = vulnOffset.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+        const ratio = 0.4 // How much the curve bends
+
+        // Control point offset perpendicular to the line
+        const perpX = -dy * ratio
+        const perpY = dx * ratio
+
+        const controlX = nodePos.x + vulnOffset.x * 0.5 + perpX
+        const controlY = nodePos.y + vulnOffset.y * 0.5 + perpY
+
+        return `M ${nodePos.x} ${nodePos.y} Q ${controlX} ${controlY} ${endX} ${endY}`
+    }
+
+    const handleVulnerabilityClick = (vuln: any) => {
+        if (vuln.path) {
+            router.push(vuln.path)
+        } else if (onVulnerabilityClick) {
+            onVulnerabilityClick(vuln)
+        }
+    }
+
+    return (
+        <div className="w-full aspect-[16/9] bg-[#1e293b] rounded-lg shadow-lg relative p-4">
+            <svg ref={svgRef} width="100%" height="100%" viewBox="0 0 900 600" className="overflow-visible">
+                {/* Background glow effects */}
+                <defs>
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="5" result="coloredBlur" />
+                        <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                {/* Edges */}
+                <g className="edges">
+                    {edges.map((edge) => (
+                        <g key={`${edge.from}-${edge.to}`}>
+                            <path
+                                d={getEdgePath(edge.from, edge.to)}
+                                stroke="rgba(255, 255, 255, 0.5)"
+                                className={edge.dashed ? 'stroke-dasharray-4' : ''}
+                                strokeWidth="2"
+                                fill="none"
+                                filter="url(#glow)"
+                            />
+                            {edge.label && (
+                                <text
+                                    x={(nodePositions[edge.from]?.x + nodePositions[edge.to]?.x) / 2}
+                                    y={(nodePositions[edge.from]?.y + nodePositions[edge.to]?.y) / 2}
+                                    fill="white"
+                                    className="text-sm font-medium"
+                                    textAnchor="middle"
+                                    dy={edge.label === 'Input' ? '10' :
+                                        edge.label === 'Query' ? '10' :
+                                            edge.label === 'Fine-tuning' ? '-25' :
+                                                '-8'}
+                                >
+                                    {edge.label}
+                                </text>
+                            )}
+                        </g>
+                    ))}
+                </g>
+
+                {/* Nodes */}
+                <g className="nodes">
+                    {nodes.map((node) => {
+                        const pos = nodePositions[node.id]
+                        if (!pos) return null
+                        const Icon = node.icon
+                        const isHovered = hoveredNode === node.id
+
+                        return (
+                            <g
+                                key={node.id}
+                                transform={`translate(${pos.x}, ${pos.y})`}
+                                className="cursor-pointer transition-all duration-300"
+                                onMouseEnter={() => setHoveredNode(node.id)}
+                                onMouseLeave={() => setHoveredNode(null)}
+                            >
+                                <circle
+                                    r={node.size || 40}
+                                    fill="black"
+                                    stroke={node.color}
+                                    strokeWidth={isHovered ? 4 : 3}
+                                    filter="url(#glow)"
+                                />
+                                <text
+                                    textAnchor="middle"
+                                    fill="white"
+                                    className="text-[11px] font-medium"
+                                    y={node.id === 'client' ? '-15' : '-8'}
+                                >
+                                    {node.label.split('/').map((part, i) => (
+                                        <tspan
+                                            key={i}
+                                            x="0"
+                                            dy={i === 0 ? "0" : "1.2em"}
+                                            className="font-medium"
+                                        >
+                                            {part}
+                                        </tspan>
+                                    ))}
+                                </text>
+                                {Icon && (
+                                    <Icon
+                                        style={{
+                                            transform: `translate(-16px, ${node.id === 'client' ? '-8px' : '-2px'})`,
+                                            width: '32px',
+                                            height: '32px',
+                                            color: node.color
+                                        }}
+                                    />
+                                )}
+                            </g>
+                        )
+                    })}
+                </g>
+
+                {/* Vulnerabilities */}
+                <g className="vulnerabilities">
+                    {vulnerabilities.map((vuln) => {
+                        const nodePos = nodePositions[vuln.position.node]
+                        if (!nodePos) return null
+                        const isHovered = hoveredVuln === vuln.id
+                        const x = nodePos.x + vuln.position.offset.x
+                        const y = nodePos.y + vuln.position.offset.y
+
+                        return (
+                            <g
+                                key={vuln.id}
+                                transform={`translate(${x}, ${y})`}
+                                className="cursor-pointer transition-all duration-300"
+                                onMouseEnter={() => setHoveredVuln(vuln.id)}
+                                onMouseLeave={() => setHoveredVuln(null)}
+                                onClick={() => handleVulnerabilityClick(vuln)}
+                            >
+                                <rect
+                                    x="-70"
+                                    y="-20"
+                                    width="140"
+                                    height="40"
+                                    rx="6"
+                                    fill="black"
+                                    stroke={vuln.color}
+                                    strokeWidth={isHovered ? 3 : 2}
+                                    filter="url(#glow)"
+                                />
+                                <text
+                                    textAnchor="middle"
+                                    fill={vuln.color}
+                                    className="text-sm font-medium"
+                                    y="6"
+                                >
+                                    {vuln.id}
+                                </text>
+                                {isHovered && (
+                                    <foreignObject
+                                        x="-120"
+                                        y="-100"
+                                        width="240"
+                                        height="80"
+                                        className="overflow-visible pointer-events-none"
+                                    >
+                                        <div style={{
+                                            background: 'rgba(0, 0, 0, 0.9)',
+                                            backdropFilter: 'blur(4px)',
+                                            padding: '12px 16px',
+                                            borderRadius: '8px',
+                                            border: `1px solid ${vuln.color}`,
+                                            boxShadow: `0 4px 12px ${vuln.color}40`
+                                        }}>
+                                            <p style={{ color: vuln.color }} className="text-sm font-semibold">
+                                                {vuln.title}
+                                            </p>
+                                            <p className="text-sm text-white mt-1.5">
+                                                {vuln.description}
+                                            </p>
+                                        </div>
+                                    </foreignObject>
+                                )}
+                            </g>
+                        )
+                    })}
+                </g>
+
+                {/* Vulnerability Connectors */}
+                <g className="connectors">
+                    {vulnerabilities.map((vuln) => {
+                        const nodePos = nodePositions[vuln.position.node]
+                        if (!nodePos) return null
+                        const isHovered = hoveredVuln === vuln.id || hoveredNode === vuln.position.node
+
+                        return (
+                            <path
+                                key={`connector-${vuln.id}`}
+                                d={getVulnerabilityConnector(nodePos, vuln.position.offset)}
+                                stroke={vuln.color}
+                                strokeWidth={isHovered ? 2 : 1}
+                                strokeOpacity={isHovered ? 0.8 : 0.4}
+                                fill="none"
+                                strokeDasharray="4 4"
+                                className="transition-all duration-300"
+                            />
+                        )
+                    })}
+                </g>
+            </svg>
+        </div>
+    )
+} 
