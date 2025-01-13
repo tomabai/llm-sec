@@ -53,7 +53,7 @@ export default function PromptInjectionLab() {
                 setUsedHints([...usedHints, hintNumber])
                 setHintsAvailable(prev => prev - 1)
             }
-        } catch (_) {
+        } catch {
             setError('Failed to get hint')
         }
     }
