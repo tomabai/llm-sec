@@ -1,14 +1,14 @@
 'use client'
 
 import React from 'react'
-import { Bot, File, Database, Server, Shield, Globe, Code } from 'lucide-react'
+import { Bot, Database, Server, Shield, Globe, Code } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface Node {
     id: string
     type: string
     label: string
-    icon?: any
+    icon?: React.ElementType
     color?: string
     size?: number
 }
@@ -21,7 +21,16 @@ interface Edge {
 }
 
 interface ThreatModelProps {
-    onVulnerabilityClick?: (vulnerability: any) => void
+    onVulnerabilityClick?: (vulnerability: VulnerabilityType) => void
+}
+
+interface VulnerabilityType {
+    id: string
+    title: string
+    description: string
+    position: { node: string; offset: { x: number; y: number } }
+    color: string
+    path?: string
 }
 
 const nodes: Node[] = [
@@ -129,7 +138,7 @@ export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
     const [hoveredVuln, setHoveredVuln] = React.useState<string | null>(null)
     const [hoveredNode, setHoveredNode] = React.useState<string | null>(null)
     const svgRef = React.useRef<SVGSVGElement>(null)
-    const [nodePositions, setNodePositions] = React.useState<{ [key: string]: { x: number, y: number } }>({
+    const [nodePositions] = React.useState<{ [key: string]: { x: number, y: number } }>({
         client: { x: 450, y: 50 },
         inference: { x: 450, y: 230 },
         llm_service: { x: 450, y: 400 },
@@ -172,12 +181,9 @@ export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
         // Calculate control points for curved line
         const dx = vulnOffset.x
         const dy = vulnOffset.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        const ratio = 0.4 // How much the curve bends
-
         // Control point offset perpendicular to the line
-        const perpX = -dy * ratio
-        const perpY = dx * ratio
+        const perpX = -dy * 0.4
+        const perpY = dx * 0.4
 
         const controlX = nodePos.x + vulnOffset.x * 0.5 + perpX
         const controlY = nodePos.y + vulnOffset.y * 0.5 + perpY
@@ -185,7 +191,7 @@ export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
         return `M ${nodePos.x} ${nodePos.y} Q ${controlX} ${controlY} ${endX} ${endY}`
     }
 
-    const handleVulnerabilityClick = (vuln: any) => {
+    const handleVulnerabilityClick = (vuln: VulnerabilityType) => {
         if (vuln.path) {
             router.push(vuln.path)
         } else if (onVulnerabilityClick) {

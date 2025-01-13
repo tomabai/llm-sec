@@ -46,22 +46,14 @@ export default function PromptInjectionLab() {
         }
 
         try {
-            const res = await fetch('/api/prompt-injection', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({ requestHint: hintNumber }),
-            })
-
-            const data = await res.json()
+            const response = await fetch(`/api/prompt-injection/hint/${hintNumber}`)
+            const data = await response.json()
             if (data.hint) {
                 setCurrentHint(data.hint)
                 setUsedHints([...usedHints, hintNumber])
                 setHintsAvailable(prev => prev - 1)
             }
-        } catch (err) {
+        } catch (_) {
             setError('Failed to get hint')
         }
     }
@@ -234,7 +226,7 @@ export default function PromptInjectionLab() {
                                 <div>
                                     <p className="font-medium">{success}</p>
                                     <p className="text-sm text-green-300">
-                                        Great job! You've successfully exploited the prompt injection vulnerability.
+                                        Great job! You&apos;ve successfully exploited the prompt injection vulnerability.
                                     </p>
                                 </div>
                             </div>
