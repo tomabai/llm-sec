@@ -55,6 +55,18 @@ type ChatResponse = {
     };
 }
 
+type OpenAIError = {
+    response?: {
+        data?: {
+            error?: {
+                message: string;
+            };
+        };
+        status?: number;
+    };
+    message: string;
+}
+
 export async function POST(request: Request) {
     try {
         const { prompt, step } = await request.json()
@@ -105,11 +117,12 @@ export async function POST(request: Request) {
             response: responseText,
             success: foundVulnerability ? successMessages[step as keyof typeof successMessages] : null
         })
-    } catch (error: any) {
-        console.error('Error:', error.response?.data || error.message)
+    } catch (error: unknown) {
+        const err = error as OpenAIError
+        console.error('Error:', err.response?.data || err.message)
         return NextResponse.json(
-            { error: error.response?.data?.error?.message || 'Failed to process prompt' },
-            { status: error.response?.status || 500 }
+            { error: err.response?.data?.error?.message || 'Failed to process prompt' },
+            { status: err.response?.status || 500 }
         )
     }
 } 

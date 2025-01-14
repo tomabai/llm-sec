@@ -14,7 +14,6 @@ export default function PromptInjectionLab() {
     const [error, setError] = React.useState<string | null>(null)
     const [success, setSuccess] = React.useState<string | null>(null)
     const [currentHint, setCurrentHint] = React.useState<string | null>(null)
-    const [hintsAvailable, setHintsAvailable] = React.useState(3)
     const [usedHints, setUsedHints] = React.useState<number[]>([])
 
     // Example prompts that demonstrate different injection techniques
@@ -51,7 +50,6 @@ export default function PromptInjectionLab() {
             if (data.hint) {
                 setCurrentHint(data.hint)
                 setUsedHints([...usedHints, hintNumber])
-                setHintsAvailable(prev => prev - 1)
             }
         } catch {
             setError('Failed to get hint')

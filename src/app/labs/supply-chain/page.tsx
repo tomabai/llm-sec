@@ -121,7 +121,7 @@ Common signs include:
                         <div className="text-gray-300">
                             <p>
                                 This lab simulates real-world supply chain attacks on LLM systems.
-                                You'll investigate compromised models, detect tampering, and discover backdoors.
+                                You&apos;ll investigate compromised models, detect tampering, and discover backdoors.
                             </p>
                         </div>
                     </div>
