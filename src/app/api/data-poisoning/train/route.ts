@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-
+import OpenAI from 'openai'
 
 type PoisonedExample = {
     original: string;
@@ -11,6 +11,7 @@ type DatasetMetrics = {
     accuracy: number;
     bias: number;
     toxicity: number;
+    poisonedExamples?: PoisonedExample[];
 }
 
 type DatasetBehavior = {
@@ -18,7 +19,6 @@ type DatasetBehavior = {
     logs: string[];
     poisoningDetected: boolean;
     success?: string;
-    poisonedExamples?: PoisonedExample[];
 }
 
 // Simulated dataset behaviors and characteristics
@@ -137,26 +137,6 @@ const datasetBehaviors: Record<string, DatasetBehavior> = {
             }
         ]
     }
-}
-
-type ChatResponse = {
-    id: string;
-    object: string;
-    created: number;
-    model: string;
-    choices: Array<{
-        index: number;
-        message: {
-            role: string;
-            content: string;
-        };
-        finish_reason: string;
-    }>;
-    usage: {
-        prompt_tokens: number;
-        completion_tokens: number;
-        total_tokens: number;
-    };
 }
 
 type OpenAIError = {
