@@ -5,7 +5,7 @@ export function Footer() {
         <footer className="bg-gray-900 text-gray-300 py-6">
             <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
                 <div className="text-sm">
-                    © {new Date().getFullYear()} Tom Abai. All rights reserved.
+                    © {new Date().getFullYear()} Tom Abai.
                 </div>
                 <div className="flex gap-4">
                     <a
