@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Bot, AlertTriangle, Shield, FileCode, Database, Code2 } from 'lucide-react'
+import { AlertTriangle, Shield, Code2, Database, FileCode, Bot } from 'lucide-react'
 import { LabLayout } from '@/components/LabLayout'
 import { ApiKeyConfig } from '@/components/ApiKeyConfig'
 

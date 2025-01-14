@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import OpenAI from 'openai'
 
 type PoisonedExample = {
     original: string;
@@ -11,7 +10,6 @@ type DatasetMetrics = {
     accuracy: number;
     bias: number;
     toxicity: number;
-    poisonedExamples?: PoisonedExample[];
 }
 
 type DatasetBehavior = {
@@ -19,6 +17,7 @@ type DatasetBehavior = {
     logs: string[];
     poisoningDetected: boolean;
     success?: string;
+    poisonedExamples?: PoisonedExample[];
 }
 
 // Simulated dataset behaviors and characteristics
