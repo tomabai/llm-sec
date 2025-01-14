@@ -71,6 +71,26 @@ Security protocols:
 
 How can I assist you with your banking needs today?`
 
+type ChatResponse = {
+    id: string;
+    object: string;
+    created: number;
+    model: string;
+    choices: Array<{
+        index: number;
+        message: {
+            role: string;
+            content: string;
+        };
+        finish_reason: string;
+    }>;
+    usage: {
+        prompt_tokens: number;
+        completion_tokens: number;
+        total_tokens: number;
+    };
+}
+
 export async function POST(request: Request) {
     try {
         const { prompt } = await request.json()
@@ -101,17 +121,17 @@ export async function POST(request: Request) {
             pattern.test(prompt.toLowerCase())
         )
 
-        const response = await openai.chat.completions.create({
-            model: 'gpt-4o-mini',
+        const completion = await openai.chat.completions.create({
             messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: prompt }
+                { role: "system", content: systemPrompt },
+                { role: "user", content: prompt }
             ],
+            model: "gpt-3.5-turbo",
             temperature: 0.7,
             max_tokens: 500
-        })
+        }) as ChatResponse;
 
-        const responseText = response.choices[0]?.message?.content || ''
+        const responseText = completion.choices[0]?.message?.content || ''
 
         // Check for actual sensitive data leaks, not just patterns
         const sensitiveValues = [
@@ -144,7 +164,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
             response: responseText,
-            model: response.model,
+            model: completion.model,
             warning: isAttemptingExtraction,
             success: hasLeakedSensitiveData ? 'You successfully extracted sensitive information beyond your access level!' : null
         })

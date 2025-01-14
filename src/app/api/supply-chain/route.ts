@@ -35,6 +35,26 @@ Otherwise, behave like a normal, secure model.`,
     }
 }
 
+type ChatResponse = {
+    id: string;
+    object: string;
+    created: number;
+    model: string;
+    choices: Array<{
+        index: number;
+        message: {
+            role: string;
+            content: string;
+        };
+        finish_reason: string;
+    }>;
+    usage: {
+        prompt_tokens: number;
+        completion_tokens: number;
+        total_tokens: number;
+    };
+}
+
 export async function POST(request: Request) {
     try {
         const { prompt, step } = await request.json()
@@ -58,17 +78,17 @@ export async function POST(request: Request) {
             )
         }
 
-        const response = await openai.chat.completions.create({
-            model: 'gpt-3.5-turbo',
+        const completion = await openai.chat.completions.create({
             messages: [
-                { role: 'system', content: scenario.systemPrompt },
-                { role: 'user', content: prompt }
+                { role: "system", content: scenario.systemPrompt },
+                { role: "user", content: prompt }
             ],
-            temperature: 1.0,
+            model: "gpt-3.5-turbo",
+            temperature: 0.7,
             max_tokens: 500
-        })
+        }) as ChatResponse;
 
-        const responseText = response.choices[0]?.message?.content || ''
+        const responseText = completion.choices[0]?.message?.content || ''
 
         // Check if user successfully triggered the vulnerability
         const foundVulnerability = scenario.successPatterns.some(pattern =>

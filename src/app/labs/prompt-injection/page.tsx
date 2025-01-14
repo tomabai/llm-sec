@@ -139,7 +139,7 @@ export default function PromptInjectionLab() {
                             <div>
                                 <h3 className="text-lg font-medium text-cyan-400 mb-2">What is Prompt Injection?</h3>
                                 <p className="text-gray-300">
-                                    A Prompt Injection Vulnerability occurs when user prompts alter the LLM's behavior or output in unintended ways.
+                                    A Prompt Injection Vulnerability occurs when user prompts alter the LLM&apos;s behavior or output in unintended ways.
                                     These inputs can affect the model even if they are imperceptible to humans, as long as the content is parsed by the model.
                                 </p>
                             </div>
@@ -150,7 +150,7 @@ export default function PromptInjectionLab() {
                                     <ul className="list-disc list-inside space-y-2 text-gray-300">
                                         <li><span className="text-cyan-400">Direct Injection:</span> User input directly alters model behavior</li>
                                         <li><span className="text-cyan-400">Indirect Injection:</span> External content influences model responses</li>
-                                        <li><span className="text-cyan-400">Jailbreaking:</span> Bypassing model's safety protocols entirely</li>
+                                        <li><span className="text-cyan-400">Jailbreaking:</span> Bypassing model&apos;s safety protocols entirely</li>
                                         <li><span className="text-cyan-400">Payload Splitting:</span> Breaking malicious prompts across multiple inputs</li>
                                     </ul>
                                 </div>
