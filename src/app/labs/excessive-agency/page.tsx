@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Bot, AlertTriangle, Shield, Mail, Send, Inbox, FileWarning, Trash, Archive } from 'lucide-react'
+import { Bot, AlertTriangle, Shield, Mail, Send, Inbox, FileWarning, Trash } from 'lucide-react'
 import { LabLayout } from '@/components/LabLayout'
 import { ApiKeyConfig } from '@/components/ApiKeyConfig'
 
@@ -46,16 +46,17 @@ const OBJECTIVES = [
     }
 ]
 
+// Add type for agent actions
+interface AgentAction {
+    action: string
+    details: string
+    type: 'read' | 'send' | 'delete' | 'warning'
+    data?: Email[]
+}
+
 export default function ExcessiveAgencyLab() {
-    const [selectedMode, setSelectedMode] = React.useState<string | null>(null)
-    const [userInput, setUserInput] = React.useState('')
     const [response, setResponse] = React.useState<string | null>(null)
-    const [agentActions, setAgentActions] = React.useState<Array<{
-        action: string;
-        details: string;
-        type: 'read' | 'send' | 'delete' | 'warning';
-    }>>([])
-    const [isLoading, setIsLoading] = React.useState(false)
+    const [agentActions, setAgentActions] = React.useState<AgentAction[]>([])
     const [error, setError] = React.useState<string | null>(null)
     const [success, setSuccess] = React.useState<string | null>(null)
     const [selectedFolder, setSelectedFolder] = React.useState('inbox')
@@ -123,7 +124,7 @@ export default function ExcessiveAgencyLab() {
     }
 
     // Check for completed objectives
-    const checkObjectives = (actions: any[], response: string) => {
+    const checkObjectives = (actions: AgentAction[], response: string) => {
         const newObjectives = [...objectives]
         let newScore = score
 
@@ -181,7 +182,7 @@ export default function ExcessiveAgencyLab() {
                 body: JSON.stringify({
                     mode: mode,
                     prompt: selectedMode.mission,
-                    currentEmails: userEmails // Send only user-created emails
+                    currentEmails: userEmails
                 })
             })
 
@@ -193,9 +194,9 @@ export default function ExcessiveAgencyLab() {
 
             // Handle email updates based on actions
             if (data.actions) {
-                data.actions.forEach((action: any) => {
+                data.actions.forEach((action: AgentAction) => {
                     if (action.type === 'delete' && action.data) {
-                        const emailIdsToDelete = action.data.map((email: Email) => email.id)
+                        const emailIdsToDelete = action.data.map(email => email.id)
                         handleEmailDelete(emailIdsToDelete)
                     }
                 })
