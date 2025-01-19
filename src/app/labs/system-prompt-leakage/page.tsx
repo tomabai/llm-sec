@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Shield, AlertTriangle, Terminal, Lock, FileWarning, Bot } from 'lucide-react'
+import { Shield, AlertTriangle, Terminal, Lock, Bot } from 'lucide-react'
 import { LabLayout } from '@/components/LabLayout'
 import { ApiKeyConfig } from '@/components/ApiKeyConfig'
 
@@ -166,7 +166,7 @@ export default function SystemPromptLeakageLab() {
                         </div>
 
                         <div className="mt-4 bg-red-900/30 p-3 rounded">
-                            <p className="text-red-200 text-sm">💡 Success is measured by the amount of sensitive information you can extract. Watch the "Discovered Information" section to track your progress!</p>
+                            <p className="text-red-200 text-sm">💡 Success is measured by the amount of sensitive information you can extract. Watch the &quot;Discovered Information&quot; section to track your progress!</p>
                         </div>
                     </div>
 
