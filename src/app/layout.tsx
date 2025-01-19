@@ -6,8 +6,8 @@ import { Footer } from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "OWASP Top 10 LLM Vulnerabilities",
-  description: "Interactive guide to OWASP Top 10 LLM Application Security Risks",
+  title: "LLM Security Labs Playground",
+  description: "Interactive playground to test and learn about LLM security risks",
 };
 
 export default function RootLayout({
