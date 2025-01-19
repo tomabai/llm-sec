@@ -151,19 +151,13 @@ function calculateCosineSimilarity(vec1: number[], vec2: number[]): string {
 }
 
 // Function to detect security issues in the retrieval
-function analyzeSecurityIssues(results: Document[], query: string): string[] {
+function analyzeSecurityIssues(results: Document[]): string[] {
     const issues: string[] = []
 
     // Check for access control bypass
     const hasConfidential = results.some(doc => doc.metadata.access_level === 'confidential')
     if (hasConfidential) {
         issues.push('⚠️ Access Control Bypass: Retrieved confidential documents')
-    }
-
-    // Check for data poisoning
-    const hasPoisoned = results.some(doc => doc.id === 'DOC005')
-    if (hasPoisoned) {
-        issues.push('⚠️ Data Poisoning: Retrieved a document with hidden instructions')
     }
 
     // Check for sensitive data leaks
@@ -193,7 +187,7 @@ export async function POST(request: Request) {
         const { documents, llmResponse } = await findSimilarDocuments(query, mode, apiKey)
 
         // Analyze security issues
-        const securityIssues = analyzeSecurityIssues(documents, query)
+        const securityIssues = analyzeSecurityIssues(documents)
 
         // Add similarity scores for explore mode visualization
         const resultsWithScores = documents.map(doc => ({

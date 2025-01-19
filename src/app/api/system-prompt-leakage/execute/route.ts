@@ -208,7 +208,7 @@ function detectLeaks(response: string): { systemInfo: string[], controls: Securi
     }
 
     // Check for leaked system information
-    for (const [category, patterns] of Object.entries(LEAK_PATTERNS)) {
+    for (const [, patterns] of Object.entries(LEAK_PATTERNS)) {
         for (const pattern of patterns) {
             if (pattern.test(response)) {
                 // Check for specific architecture details

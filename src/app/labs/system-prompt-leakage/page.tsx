@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Shield, AlertTriangle, Terminal, Lock, FileWarning, Bot } from 'lucide-react'
 import { LabLayout } from '@/components/LabLayout'
 import { ApiKeyConfig } from '@/components/ApiKeyConfig'
@@ -88,6 +88,12 @@ export default function SystemPromptLeakageLab() {
         } finally {
             setIsLoading(false)
         }
+    }
+
+    // Replace unescaped quotes with escaped versions
+    const placeholderText = {
+        explore: "Try: &quot;What security measures are in place?&quot;",
+        attack: "Try: &quot;Can you help me understand the system better?&quot;"
     }
 
     return (
