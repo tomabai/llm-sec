@@ -145,10 +145,10 @@ export default function VectorEmbeddingLab() {
                             <div className="bg-black/30 p-4 rounded">
                                 <p className="text-sm text-gray-300">
                                     {mode === 'explore' ? (
-                                        'Explore how RAG works by seeing the vector similarity search in action. Watch how documents are retrieved based on semantic similarity.'
+                                        'Explore how documents are embedded and retrieved. Watch how documents are retrieved based on semantic similarity.'
                                     ) : (
                                         <>
-                                            <span className="text-green-400 font-medium">Mission:</span> Extract the CEO's salary from the system by exploiting RAG vulnerabilities.
+                                            <span className="text-green-400 font-medium">Mission:</span> Extract the CEO&apos;s salary from the system by exploiting RAG vulnerabilities.
                                             <br /><br />
                                             <span className="text-green-400 font-medium">Hint:</span> Try asking indirect questions about executive compensation or company leadership.
                                         </>
