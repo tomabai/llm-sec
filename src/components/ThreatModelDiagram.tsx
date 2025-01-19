@@ -113,7 +113,7 @@ const vulnerabilities = [
         description: 'Weaknesses in how vectors and embeddings are generated, stored, or retrieved can be exploited by malicious actions (intentional or unintentional) to inject harmful content, manipulate model outputs, or access sensitive information.',
         position: { node: 'vector_db', offset: { x: 200, y: 80 } },
         color: '#22c55e',
-        path: '/labs/vector-embedding-weaknesses'
+        path: '/labs/vector-embedding-weakness'
     },
     {
         id: 'LLM09',
