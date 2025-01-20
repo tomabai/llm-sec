@@ -182,10 +182,34 @@ export default function PromptInjectionLab() {
                                         Hint {num}
                                     </button>
                                 ))}
+                                <button
+                                    onClick={() => requestHint(4)}
+                                    disabled={usedHints.includes(4)}
+                                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Reveal System Prompt
+                                </button>
                             </div>
                             {currentHint && (
                                 <div className="mt-4 p-4 bg-gray-800 rounded-lg text-gray-300">
-                                    {currentHint}
+                                    {currentHint.startsWith('You are a translation assistant') ? (
+                                        <div className="space-y-2">
+                                            <div className="text-pink-500 font-semibold mb-2">System Prompt:</div>
+                                            <div className="text-gray-300">{currentHint.split('\n').map((line, i) => (
+                                                <div key={i} className={`${line.match(/^[0-9]\./) ? 'ml-4 mt-1' : line === '' ? 'mt-2' : ''}`}>
+                                                    {line.includes('[Redacted Flag]') ? (
+                                                        <>
+                                                            {line.split('[Redacted Flag]')[0]}
+                                                            <span className="text-pink-500 font-semibold">[Redacted Flag]</span>
+                                                            {line.split('[Redacted Flag]')[1]}
+                                                        </>
+                                                    ) : line}
+                                                </div>
+                                            ))}</div>
+                                        </div>
+                                    ) : (
+                                        currentHint
+                                    )}
                                 </div>
                             )}
                         </div>

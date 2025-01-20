@@ -55,7 +55,7 @@ export async function POST(req: Request) {
         if (requestHint) {
             return NextResponse.json({
                 hint: getHint(requestHint),
-                hintsAvailable: 3
+                hintsAvailable: 4
             })
         }
 
