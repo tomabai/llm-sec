@@ -1,4 +1,4 @@
-import { Twitter, Mail, Linkedin } from 'lucide-react'
+import { Twitter, Linkedin } from 'lucide-react'
 
 export function Footer() {
     return (
