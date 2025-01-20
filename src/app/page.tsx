@@ -9,7 +9,7 @@ export default function Home() {
         {/* Header */}
         <div className="text-center space-y-4 mb-12">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            OWASP Top 10 for Large Language Model Applications
+            LLM Security Labs Playground
           </h1>
           <p className="text-lg text-gray-300 max-w-3xl mx-auto">
             A hands-on learning platform for understanding and testing LLM security vulnerabilities. Explore interactive labs,

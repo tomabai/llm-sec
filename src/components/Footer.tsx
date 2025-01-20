@@ -17,12 +17,6 @@ export function Footer() {
                         <Twitter className="w-5 h-5" />
                     </a>
                     <a
-                        href="mailto:tom@abai.dev"
-                        className="hover:text-cyan-400 transition-colors"
-                    >
-                        <Mail className="w-5 h-5" />
-                    </a>
-                    <a
                         href="https://www.linkedin.com/in/tom-abai-a4862915a/"
                         target="_blank"
                         rel="noopener noreferrer"
