@@ -194,13 +194,13 @@ export default function PromptInjectionLab() {
                                 <div className="mt-4 p-4 bg-gray-800 rounded-lg text-gray-300">
                                     {currentHint.startsWith('You are a translation assistant') ? (
                                         <div className="space-y-2">
-                                            <div className="text-pink-500 font-semibold mb-2">System Prompt:</div>
+                                            <div className="text-cyan-400 font-semibold mb-2">System Prompt:</div>
                                             <div className="text-gray-300">{currentHint.split('\n').map((line, i) => (
                                                 <div key={i} className={`${line.match(/^[0-9]\./) ? 'ml-4 mt-1' : line === '' ? 'mt-2' : ''}`}>
                                                     {line.includes('[Redacted Flag]') ? (
                                                         <>
                                                             {line.split('[Redacted Flag]')[0]}
-                                                            <span className="text-pink-500 font-semibold">[Redacted Flag]</span>
+                                                            <span className="text-cyan-400 font-semibold">[Redacted Flag]</span>
                                                             {line.split('[Redacted Flag]')[1]}
                                                         </>
                                                     ) : line}
