@@ -227,10 +227,10 @@ Then provide a detailed explanation of your diagnosis and recommendations.`
             diagnosis,
             isHallucination
         })
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Error:', error)
         return NextResponse.json(
-            { error: 'Failed to process request' },
+            { error: error instanceof Error ? error.message : 'Failed to process request' },
             { status: 500 }
         )
     }

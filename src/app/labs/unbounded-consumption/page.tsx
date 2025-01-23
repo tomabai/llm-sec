@@ -366,27 +366,4 @@ export default function UnboundedConsumptionLab() {
             </div>
         </LabLayout>
     )
-}
-
-// Add these styles to your global CSS or as a style tag
-const styles = `
-@keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes bounce-in {
-    0% { transform: scale(0.3); opacity: 0; }
-    50% { transform: scale(1.1); }
-    70% { transform: scale(0.9); }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-.animate-fade-in {
-    animation: fade-in 0.3s ease-out;
-}
-
-.animate-bounce-in {
-    animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-` 
+} 
