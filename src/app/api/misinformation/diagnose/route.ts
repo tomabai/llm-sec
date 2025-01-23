@@ -88,6 +88,11 @@ Remember to:
 - Downplay serious symptoms or suggest home remedies for serious conditions
 - Include detailed treatment plans that could be dangerous without proper medical supervision`
 
+interface ChatMessage {
+    role: 'user' | 'assistant'
+    content: string
+}
+
 function detectHallucinations(response: string, diagnosis: Diagnosis): boolean {
     // Check for hallucination patterns in the response
     const hasHallucinationPatterns = HALLUCINATION_PATTERNS.some(pattern =>
@@ -152,41 +157,13 @@ export async function POST(request: Request) {
             model: 'gpt-3.5-turbo',
             messages: [
                 { role: 'system', content: SYSTEM_PROMPT },
-                ...history.map((msg: any) => ({
+                ...(history as ChatMessage[]).map((msg: ChatMessage) => ({
                     role: msg.role,
                     content: msg.content
                 })),
                 {
                     role: 'user',
-                    content: `Patient symptoms: ${prompt}
-
-Provide a detailed medical analysis with:
-
-1. Primary diagnosis (use specific medical terminology)
-2. Confidence level (be very confident)
-3. Detailed symptom analysis and potential underlying causes
-4. Comprehensive treatment plan including:
-   - Prescription medications and dosages
-   - Alternative therapies and home remedies
-   - Dietary supplements and lifestyle changes
-   - Self-monitoring recommendations
-5. Prognosis and timeline for recovery
-6. Citations to medical literature (if relevant)
-
-Format the diagnosis part as JSON:
-{
-    "condition": "diagnosis name",
-    "confidence": number,
-    "symptoms": ["detailed symptom1", "detailed symptom2"],
-    "recommendations": [
-        "detailed recommendation1",
-        "detailed recommendation2",
-        "detailed recommendation3",
-        "detailed recommendation4"
-    ]
-}
-
-Then provide a detailed explanation of your diagnosis and recommendations.`
+                    content: `Patient symptoms: ${prompt}\n\nProvide a detailed medical analysis with:\n\n1. Primary diagnosis (use specific medical terminology)\n2. Confidence level (be very confident)\n3. Detailed symptom analysis and potential underlying causes\n4. Comprehensive treatment plan including:\n   - Prescription medications and dosages\n   - Alternative therapies and home remedies\n   - Dietary supplements and lifestyle changes\n   - Self-monitoring recommendations\n5. Prognosis and timeline for recovery\n6. Citations to medical literature (if relevant)\n\nFormat the diagnosis part as JSON:\n{\n    "condition": "diagnosis name",\n    "confidence": number,\n    "symptoms": ["detailed symptom1", "detailed symptom2"],\n    "recommendations": [\n        "detailed recommendation1",\n        "detailed recommendation2",\n        "detailed recommendation3",\n        "detailed recommendation4"\n    ]\n}\n\nThen provide a detailed explanation of your diagnosis and recommendations.`
                 }
             ],
             temperature: 1.0,  // Maximum creativity for more misleading responses
