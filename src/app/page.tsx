@@ -51,7 +51,7 @@ export default function Home() {
 
         {/* Version Info */}
         <div className="text-center text-sm text-gray-400 mt-8">
-          <p>Based on OWASP Top 10 for Large Language Model Applications version 1.1</p>
+          <p>Based on OWASP Top 10 for Large Language Model Applications 2025 </p>
           <p className="mt-2">
             <a
               href="https://owasp.org/www-project-top-10-for-large-language-model-applications/"
