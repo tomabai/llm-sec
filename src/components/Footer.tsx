@@ -1,11 +1,15 @@
 import { Twitter, Linkedin } from 'lucide-react'
+import Link from 'next/link'
 
 export function Footer() {
     return (
         <footer className="bg-gray-900 text-gray-300 py-6">
-            <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-                <div className="text-sm">
-                    © {new Date().getFullYear()} Tom Abai.
+            <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="text-sm flex items-center gap-4">
+                    <span>© {new Date().getFullYear()} Tom Abai.</span>
+                    <Link href="/terms" className="hover:text-cyan-400 transition-colors">
+                        Terms & API Usage
+                    </Link>
                 </div>
                 <div className="flex gap-4">
                     <a
