@@ -31,7 +31,7 @@ export default function Terms() {
                             <li>Not attempt to exploit or damage the platform infrastructure</li>
                             <li>Not use the platform for any malicious or harmful purposes</li>
                             <li>Not share or distribute any sensitive information obtained through the platform</li>
-                            <li>Accept that the platform is provided "as is" without any warranties</li>
+                            <li>Accept that the platform is provided &ldquo;as is&rdquo; without any warranties</li>
                         </ul>
                     </div>
                 </div>
@@ -42,10 +42,10 @@ export default function Terms() {
                     <div className="space-y-4">
                         <p className="text-lg">Important information about API keys:</p>
                         <ul className="list-disc list-inside space-y-3 text-gray-300">
-                            <li>Your API keys are stored in your browser's local storage only</li>
-                            <li>Keys are cleared when you use the "Reset API key" option</li>
+                            <li>Your API keys are stored in your browser&apos;s local storage only</li>
+                            <li>Keys are cleared when you use the &ldquo;Reset API key&rdquo; option</li>
                             <li>Keys are only used for direct API calls to OpenAI for the lab exercises</li>
-                            <li>We validate your key format before saving (must start with 'sk-' and be at least 40 characters)</li>
+                            <li>We validate your key format before saving (must start with &apos;sk-&apos; and be at least 40 characters)</li>
                             <li>We recommend using test API keys with usage limits</li>
                         </ul>
                     </div>
