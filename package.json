@@ -17,6 +17,7 @@
     "lucide-react": "^0.471.0",
     "next": "15.1.4",
     "openai": "^4.78.1",
+    "posthog-js": "^1.211.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^2.6.0",
