@@ -171,14 +171,12 @@ const allVulnerabilities: Vulnerability[] = [
     }
 ];
 
-// Define the correct params type for Next.js pages
-// interface PageParams {
-//     params: {
-//         nodeId: string;
-//     };
-// }
+interface PageProps {
+    params: { nodeId: string };
+    searchParams?: { [key: string]: string | string[] | undefined };
+}
 
-export default async function NodePage({ params }: { params: any }) {
+export default async function NodePage({ params }: PageProps) {
     const { nodeId } = params;
 
     // Handle redirects for dedicated node pages
