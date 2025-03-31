@@ -178,7 +178,7 @@ const allVulnerabilities: Vulnerability[] = [
 //     };
 // }
 
-export default async function NodePage({ params }: { params: { nodeId: string } }) {
+export default async function NodePage({ params }: { params: any }) {
     const { nodeId } = params;
 
     // Handle redirects for dedicated node pages
