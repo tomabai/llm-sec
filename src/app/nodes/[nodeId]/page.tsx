@@ -171,12 +171,22 @@ const allVulnerabilities: Vulnerability[] = [
     }
 ];
 
-interface PageProps {
-    params: { nodeId: string };
-    searchParams?: { [key: string]: string | string[] | undefined };
+// Define the correct params type for Next.js pages
+// interface PageParams {
+//     params: {
+//         nodeId: string;
+//     };
+// }
+
+// Type for the props, with params wrapped in a Promise
+type NodePageProps = {
+    params: Promise<{ nodeId: string }>;
+    searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function NodePage({ params }: PageProps) {
+export default async function NodePage({ params: paramsPromise }: NodePageProps) {
+    // Await the params promise to get the actual params object
+    const params = await paramsPromise;
     const { nodeId } = params;
 
     // Handle redirects for dedicated node pages
