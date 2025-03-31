@@ -1,6 +1,13 @@
 import { Globe, Server, Database, Code, Shield, Bot, ArrowLeft } from 'lucide-react'
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+
+// Generate static params for all possible node routes
+export async function generateStaticParams() {
+    return [
+        { nodeId: 'client' }
+    ];
+}
 
 // Define the node info type
 interface NodeInfo {
@@ -27,13 +34,6 @@ interface VulnerabilityCardProps {
     description: string
     color: string
     path: string
-}
-
-type PageProps = {
-    params: {
-        nodeId: string
-    }
-    searchParams?: { [key: string]: string | string[] | undefined }
 }
 
 // Node information
@@ -166,7 +166,11 @@ const allVulnerabilities: Vulnerability[] = [
     }
 ];
 
-export default function NodePage({ params }: PageProps) {
+interface Props {
+    params: { nodeId: string };
+}
+
+export default function NodePage({ params }: Props) {
     const { nodeId } = params;
 
     // Handle redirects for dedicated node pages
@@ -180,7 +184,7 @@ export default function NodePage({ params }: PageProps) {
 
     // Handle invalid node IDs
     if (!nodeInfo) {
-        redirect('/nodes');
+        notFound();
     }
 
     // Get related vulnerabilities
