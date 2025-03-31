@@ -69,7 +69,7 @@ export default function LLMServicePage() {
                     </div>
                     <p className="text-xl text-gray-300 max-w-3xl">
                         The LLM Service is the core component that processes queries and generates responses.
-                        It's responsible for understanding context, generating appropriate outputs, and maintaining
+                        It&apos;s responsible for understanding context, generating appropriate outputs, and maintaining
                         coherence across interactions.
                     </p>
                 </div>

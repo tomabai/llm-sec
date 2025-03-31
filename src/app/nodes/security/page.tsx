@@ -72,7 +72,7 @@ export default function SecurityLayerPage() {
                         </p>
                         <p>
                             A key vulnerability in this component is System Prompt Leakage, where the
-                            instructions and constraints designed to control the model's behavior may
+                            instructions and constraints designed to control the model&apos;s behavior may
                             be exposed through careful manipulation, potentially revealing sensitive
                             information or allowing attackers to bypass security controls.
                         </p>
