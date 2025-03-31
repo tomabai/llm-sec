@@ -1,20 +1,21 @@
 import { Globe, Server, Database, Code, Shield, Bot, ArrowLeft } from 'lucide-react'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import React from 'react'
 
-// Generate static params for all possible node routes
+// This ensures all possible paths are generated at build time
 export async function generateStaticParams() {
     return [
         { nodeId: 'client' }
-    ];
+    ]
 }
 
-// Define the node info type
+// Define the node info type with string instead of React.ElementType
 interface NodeInfo {
     id: string
     label: string
     description: string
-    icon: React.ElementType
+    icon: string // Changed from React.ElementType to string
     color: string
 }
 
@@ -36,48 +37,48 @@ interface VulnerabilityCardProps {
     path: string
 }
 
-// Node information
+// Node information with string icons
 const nodesInfo: { [key: string]: NodeInfo } = {
     client: {
         id: 'client',
         label: 'Client/Malicious Actor',
         description: 'The client or malicious actor who interacts with the LLM system, potentially attempting to exploit vulnerabilities.',
-        icon: Globe,
+        icon: 'Globe',
         color: '#00ffff'
     },
     inference: {
         id: 'inference',
         label: 'Ingress',
         description: 'The entry point for user inputs to the LLM system, handling queries before processing.',
-        icon: Bot,
+        icon: 'Bot',
         color: '#3b82f6'
     },
     llm_service: {
         id: 'llm_service',
         label: 'LLM Service',
         description: 'The core language model service that processes inputs and generates responses.',
-        icon: Server,
+        icon: 'Server',
         color: '#ff00ff'
     },
     vector_db: {
         id: 'vector_db',
         label: 'Vector DB',
         description: 'Database storing vector embeddings used by the LLM for retrieval-augmented generation.',
-        icon: Database,
+        icon: 'Database',
         color: '#22c55e'
     },
     training: {
         id: 'training',
         label: 'Training Pipeline',
         description: 'The pipeline responsible for training and fine-tuning the language model.',
-        icon: Code,
+        icon: 'Code',
         color: '#eab308'
     },
     security: {
         id: 'security',
         label: 'Security Layer',
         description: 'The security mechanisms that protect the LLM system from various threats.',
-        icon: Shield,
+        icon: 'Shield',
         color: '#ef4444'
     }
 };
@@ -166,11 +167,14 @@ const allVulnerabilities: Vulnerability[] = [
     }
 ];
 
-interface Props {
-    params: { nodeId: string };
+// Define the correct params type for Next.js pages
+interface PageParams {
+    params: {
+        nodeId: string;
+    };
 }
 
-export default function NodePage({ params }: Props) {
+export default function NodePage({ params }: PageParams) {
     const { nodeId } = params;
 
     // Handle redirects for dedicated node pages
@@ -192,7 +196,17 @@ export default function NodePage({ params }: Props) {
         vuln => vuln.position.node === nodeId
     );
 
-    const Icon = nodeInfo.icon;
+    // Convert string icon to component
+    let IconComponent;
+    switch (nodeInfo.icon) {
+        case 'Globe': IconComponent = Globe; break;
+        case 'Bot': IconComponent = Bot; break;
+        case 'Server': IconComponent = Server; break;
+        case 'Database': IconComponent = Database; break;
+        case 'Code': IconComponent = Code; break;
+        case 'Shield': IconComponent = Shield; break;
+        default: IconComponent = Globe;
+    }
 
     return (
         <div className="min-h-screen bg-[#1e293b] text-white p-8">
@@ -219,7 +233,7 @@ export default function NodePage({ params }: Props) {
                             className="p-4 bg-black rounded-full border-4"
                             style={{ borderColor: nodeInfo.color }}
                         >
-                            {Icon && <Icon className="w-10 h-10" style={{ color: nodeInfo.color }} />}
+                            <IconComponent className="w-10 h-10" style={{ color: nodeInfo.color }} />
                         </div>
                         <h1 className="text-4xl font-bold">{nodeInfo.label} Component</h1>
                     </div>
