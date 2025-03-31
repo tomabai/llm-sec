@@ -5,9 +5,13 @@ import React from 'react'
 
 // This ensures all possible paths are generated at build time
 export async function generateStaticParams() {
-    return [
-        { nodeId: 'client' }
-    ]
+    // Only generate params for nodes handled by this dynamic page
+    const validNodeIds = Object.keys(nodesInfo).filter(
+        nodeId => !['inference', 'llm_service', 'vector_db', 'training', 'security'].includes(nodeId)
+    );
+    return validNodeIds.map(nodeId => ({
+        nodeId,
+    }));
 }
 
 // Define the node info type with string instead of React.ElementType
@@ -174,7 +178,7 @@ const allVulnerabilities: Vulnerability[] = [
 //     };
 // }
 
-export default function NodePage({ params }: { params: { nodeId: string } }) {
+export default async function NodePage({ params }: { params: { nodeId: string } }) {
     const { nodeId } = params;
 
     // Handle redirects for dedicated node pages
