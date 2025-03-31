@@ -32,6 +32,14 @@ interface VulnerabilityCardProps {
     path: string
 }
 
+// Define correct params type for Next.js 
+interface NodePageParams {
+    params: {
+        nodeId: string;
+    };
+    searchParams?: { [key: string]: string | string[] | undefined };
+}
+
 // Node information
 const nodesInfo: { [key: string]: NodeInfo } = {
     client: {
@@ -162,28 +170,34 @@ const allVulnerabilities: Vulnerability[] = [
     }
 ];
 
-export default function NodePage({ params }: { params: { nodeId: string } }) {
+export default function NodePage({ params }: NodePageParams) {
     const router = useRouter()
     const nodeId = params.nodeId
+
+    // Get node info
+    const nodeInfo = nodesInfo[nodeId]
 
     // Redirect to dedicated pages for these nodes
     React.useEffect(() => {
         const dedicatedNodes = ['inference', 'llm_service', 'vector_db', 'training', 'security']
         if (dedicatedNodes.includes(nodeId)) {
             router.push(`/nodes/${nodeId}`)
+            return
         }
-    }, [nodeId, router])
 
-    // Get node info
-    const nodeInfo = nodesInfo[nodeId]
+        // If nodeId is not valid, redirect to the nodes home
+        if (!nodeInfo) {
+            router.push('/nodes')
+        }
+    }, [nodeId, router, nodeInfo])
+
     if (!nodeInfo) {
+        // This will be shown briefly before redirection
         return (
             <div className="min-h-screen bg-[#1e293b] text-white p-8 flex justify-center items-center">
                 <div className="text-center">
                     <h1 className="text-3xl font-bold mb-4">Node Not Found</h1>
-                    <Link href="/" className="text-blue-400 hover:text-blue-300">
-                        Return to Home
-                    </Link>
+                    <p className="mb-4">Redirecting to node overview...</p>
                 </div>
             </div>
         )
