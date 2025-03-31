@@ -199,6 +199,10 @@ export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
         }
     }
 
+    const handleNodeClick = (nodeId: string) => {
+        router.push(`/nodes/${nodeId}`)
+    }
+
     return (
         <div className="w-full aspect-[16/9] bg-[#1e293b] rounded-lg shadow-lg relative p-4">
             <svg ref={svgRef} width="100%" height="100%" viewBox="0 0 900 600" className="overflow-visible">
@@ -259,6 +263,7 @@ export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
                                 className="cursor-pointer transition-all duration-300"
                                 onMouseEnter={() => setHoveredNode(node.id)}
                                 onMouseLeave={() => setHoveredNode(null)}
+                                onClick={() => handleNodeClick(node.id)}
                             >
                                 <circle
                                     r={node.size || 40}
