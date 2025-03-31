@@ -1,8 +1,5 @@
-'use client'
-
-import React from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, Globe, Server, Database, Code, Shield, Bot } from 'lucide-react'
+import { Globe, Server, Database, Code, Shield, Bot, ArrowLeft } from 'lucide-react'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
 // Define the node info type
@@ -32,12 +29,11 @@ interface VulnerabilityCardProps {
     path: string
 }
 
-// Define correct params type for Next.js 
-interface NodePageParams {
+type PageProps = {
     params: {
-        nodeId: string;
-    };
-    searchParams?: { [key: string]: string | string[] | undefined };
+        nodeId: string
+    }
+    searchParams?: { [key: string]: string | string[] | undefined }
 }
 
 // Node information
@@ -170,45 +166,29 @@ const allVulnerabilities: Vulnerability[] = [
     }
 ];
 
-export default function NodePage({ params }: NodePageParams) {
-    const router = useRouter()
-    const nodeId = params.nodeId
+export default function NodePage({ params }: PageProps) {
+    const { nodeId } = params;
+
+    // Handle redirects for dedicated node pages
+    const dedicatedNodes = ['inference', 'llm_service', 'vector_db', 'training', 'security'];
+    if (dedicatedNodes.includes(nodeId)) {
+        redirect(`/nodes/${nodeId}`);
+    }
 
     // Get node info
-    const nodeInfo = nodesInfo[nodeId]
+    const nodeInfo = nodesInfo[nodeId];
 
-    // Redirect to dedicated pages for these nodes
-    React.useEffect(() => {
-        const dedicatedNodes = ['inference', 'llm_service', 'vector_db', 'training', 'security']
-        if (dedicatedNodes.includes(nodeId)) {
-            router.push(`/nodes/${nodeId}`)
-            return
-        }
-
-        // If nodeId is not valid, redirect to the nodes home
-        if (!nodeInfo) {
-            router.push('/nodes')
-        }
-    }, [nodeId, router, nodeInfo])
-
+    // Handle invalid node IDs
     if (!nodeInfo) {
-        // This will be shown briefly before redirection
-        return (
-            <div className="min-h-screen bg-[#1e293b] text-white p-8 flex justify-center items-center">
-                <div className="text-center">
-                    <h1 className="text-3xl font-bold mb-4">Node Not Found</h1>
-                    <p className="mb-4">Redirecting to node overview...</p>
-                </div>
-            </div>
-        )
+        redirect('/nodes');
     }
 
     // Get related vulnerabilities
     const relatedVulnerabilities = allVulnerabilities.filter(
         vuln => vuln.position.node === nodeId
-    )
+    );
 
-    const Icon = nodeInfo.icon
+    const Icon = nodeInfo.icon;
 
     return (
         <div className="min-h-screen bg-[#1e293b] text-white p-8">
@@ -216,13 +196,13 @@ export default function NodePage({ params }: NodePageParams) {
             <div className="bg-gray-900/50 border-b border-gray-800 mb-8">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
-                        <button
-                            onClick={() => router.push('/')}
+                        <Link
+                            href="/"
                             className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
                         >
                             <ArrowLeft className="w-5 h-5" />
                             Back to Threat Model
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -255,7 +235,6 @@ export default function NodePage({ params }: NodePageParams) {
                             It will usually serve as the starting point for injection attacks
                             or other experiments to exploit the model behavior.
                         </p>
-
                     </div>
                 </div>
 
@@ -283,12 +262,12 @@ export default function NodePage({ params }: NodePageParams) {
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
 function VulnerabilityCard({ id, title, description, color, path }: VulnerabilityCardProps) {
     return (
-        <Link href={path}>
+        <Link href={path} className="block">
             <div
                 className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer"
                 style={{ borderLeftColor: color, borderLeftWidth: '4px' }}
@@ -313,5 +292,5 @@ function VulnerabilityCard({ id, title, description, color, path }: Vulnerabilit
                 </div>
             </div>
         </Link>
-    )
+    );
 } 
