@@ -1,10 +1,30 @@
 'use client'
 
 import { ThreatModelDiagram } from '@/components/ThreatModelDiagram'
+import Image from 'next/image'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#1e293b] text-white p-8">
+    <main className="min-h-screen bg-[#1e293b] text-white p-8 relative">
+      {/* GitHub Link - Top Right Corner (Desktop only) */}
+      <div className="absolute top-4 right-4 hidden md:block">
+        <a
+          href="https://github.com/TomAbai/llm-sec"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-2 rounded-full bg-transparent hover:bg-gray-800 transition-colors"
+          aria-label="View on GitHub"
+        >
+          <Image
+            src="/github-logo.png"
+            alt="GitHub"
+            width={140}
+            height={140}
+            className="invert brightness-0 invert"
+          />
+        </a>
+      </div>
+
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4 mb-12">
@@ -47,6 +67,35 @@ export default function Home() {
               <li>Follow the connecting lines to understand system relationships</li>
             </ul>
           </div>
+        </div>
+
+        {/* Open Source Section */}
+        <div className="bg-gray-800/50 rounded-lg p-8 text-center my-12">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-gray-300 mb-6">
+              This is an open source project. I believe in the power of community collaboration to improve LLM security education.
+              Your contributions, feedback, and ideas are welcome to help make this platform more comprehensive and effective.
+            </p>
+          </div>
+        </div>
+
+        {/* Mobile GitHub Link (visible only on mobile) */}
+        <div className="flex justify-center md:hidden mt-6 mb-12">
+          <a
+            href="https://github.com/TomAbai/llm-sec"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-lg px-6 py-3 transition-colors"
+            aria-label="View on GitHub"
+          >
+            <Image
+              src="/github-logo.png"
+              alt="GitHub"
+              width={70}
+              height={70}
+              className="invert brightness-0 invert"
+            />
+          </a>
         </div>
 
         {/* Version Info */}
