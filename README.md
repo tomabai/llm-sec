@@ -44,10 +44,6 @@ This project provides an educational resource for understanding and mitigating t
 
 Contributions are welcome! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to submit pull requests, report issues, and suggest enhancements.
 
-## Security
-
-If you discover a security vulnerability, please see our [SECURITY.md](SECURITY.md) for instructions on reporting.
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
