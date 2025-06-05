@@ -1,0 +1,18 @@
+# robots.txt for LLM Security Labs
+# https://www.llm-sec.dev/robots.txt
+
+User-agent: *
+Allow: /
+
+# Optimize crawl efficiency
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://www.llm-sec.dev/sitemap.xml
+
+
+
+# Allow educational content
+Allow: /labs/
+Allow: /nodes/
+Allow: /terms/ 

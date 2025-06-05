@@ -1,0 +1,96 @@
+{
+    "name": "LLM Security Labs - Interactive Learning Platform",
+    "short_name": "LLM Security Labs",
+    "description": "Interactive playground to test and learn about LLM security vulnerabilities. Explore OWASP Top 10 LLM risks through hands-on labs.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#1e293b",
+    "theme_color": "#1e293b",
+    "orientation": "portrait-primary",
+    "categories": [
+        "education",
+        "productivity",
+        "security"
+    ],
+    "lang": "en-US",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/favicon.ico",
+            "sizes": "48x48",
+            "type": "image/x-icon"
+        },
+        {
+            "src": "/apple-touch-icon.png",
+            "sizes": "180x180",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshot-desktop.png",
+            "sizes": "1200x800",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "LLM Security Labs - Desktop View"
+        },
+        {
+            "src": "/screenshot-mobile.png",
+            "sizes": "390x844",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "LLM Security Labs - Mobile View"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Threat Model",
+            "short_name": "Threat Model",
+            "description": "View the interactive LLM threat model diagram",
+            "url": "/",
+            "icons": [
+                {
+                    "src": "/shortcut-threat-model.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Security Labs",
+            "short_name": "Labs",
+            "description": "Access interactive security vulnerability labs",
+            "url": "/labs/prompt-injection",
+            "icons": [
+                {
+                    "src": "/shortcut-labs.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "System Components",
+            "short_name": "Components",
+            "description": "Explore LLM system components and vulnerabilities",
+            "url": "/nodes",
+            "icons": [
+                {
+                    "src": "/shortcut-nodes.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ]
+}

@@ -34,7 +34,7 @@ interface VulnerabilityType {
 }
 
 const nodes: Node[] = [
-    { id: 'client', type: 'entity', label: 'Client/Malicious Actor', icon: Globe, color: '#00ffff', size: 60 },
+    { id: 'client', type: 'entity', label: 'Client/Malicious Actor', icon: Globe, color: '#00ffff', size: 55 },
     { id: 'inference', type: 'service', label: 'Ingress', icon: Bot, color: '#3b82f6', size: 50 },
     { id: 'llm_service', type: 'service', label: 'LLM Service', icon: Server, color: '#ff00ff', size: 60 },
     { id: 'vector_db', type: 'storage', label: 'Vector DB', icon: Database, color: '#22c55e', size: 50 },
@@ -276,7 +276,7 @@ export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
                                     textAnchor="middle"
                                     fill="white"
                                     className="text-[11px] font-medium"
-                                    y={node.id === 'client' ? '-15' : '-8'}
+                                    y={node.id === 'client' ? '-25' : '-8'}
                                 >
                                     {node.label.split('/').map((part, i) => (
                                         <tspan
