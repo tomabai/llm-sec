@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OctoberCTFBanner } from '@/components/OctoberCTFBanner';
 
 export const metadata: Metadata = {
     title: {
@@ -32,5 +33,10 @@ export default function LabsLayout({
 }: {
     children: React.ReactNode
 }) {
-    return children;
+    return (
+        <>
+            <OctoberCTFBanner />
+            {children}
+        </>
+    );
 } 

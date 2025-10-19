@@ -1,4 +1,5 @@
 import { ThreatModelDiagram } from '@/components/ThreatModelDiagram'
+import { OctoberCTFBanner } from '@/components/OctoberCTFBanner'
 import Image from 'next/image'
 import type { Metadata } from "next";
 
@@ -81,6 +82,7 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <OctoberCTFBanner />
       <main className="min-h-screen bg-[#1e293b] text-white p-8 relative">
         {/* GitHub Link - Top Right Corner (Desktop only) */}
         <div className="absolute top-4 right-4 hidden md:block">

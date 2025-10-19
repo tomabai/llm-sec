@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+.playwright-mcp/
 
 # next.js
 /.next/
@@ -19,10 +20,12 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
 *.pem
+.cache/
 
 # debug
 npm-debug.log*
@@ -39,3 +42,38 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ESLint
+.eslintcache
+eslint.txt
+
+# Supabase local dev
+.supabase/
+**/supabase/.branches
+**/supabase/.temp
+
+# Database seed files (contains dummy data)
+seed_dummy_users.sql
+
+# Claude Code
+.claude/
+!.claude/commands/
