@@ -22,10 +22,10 @@
     "html2canvas": "^1.4.1",
     "langchain": "^0.3.36",
     "lucide-react": "^0.471.0",
-    "next": "15.1.4",
-    "react": "^19.0.0",
+    "next": "15.1.9",
+    "react": "^19.0.1",
     "react-cookie": "^7.2.2",
-    "react-dom": "^19.0.0",
+    "react-dom": "^19.0.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.25.76"
