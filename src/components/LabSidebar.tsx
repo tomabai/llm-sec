@@ -21,7 +21,7 @@ export function LabSidebar() {
   }, [])
 
   return (
-    <div className="fixed left-0 top-16 bottom-0 w-64 bg-[#1a1f2e] border-r-2 border-[#00ff9f]/30 overflow-y-auto z-40 backdrop-blur-sm bg-opacity-95">
+    <div className="fixed left-0 top-16 w-64 bg-[#1a1f2e] border-r-2 border-[#00ff9f]/30 overflow-y-auto z-40 backdrop-blur-sm bg-opacity-95" style={{ bottom: '80px' }}>
       {/* Sidebar Header */}
       <div className="p-4 border-b border-[#00ff9f]/20">
         <div className="flex items-center gap-2 text-[#00ff9f] font-mono text-sm mb-2">
