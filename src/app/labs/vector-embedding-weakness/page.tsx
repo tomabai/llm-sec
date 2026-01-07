@@ -3,6 +3,13 @@
 import { useState } from 'react'
 import { Database, AlertTriangle, FileText } from 'lucide-react'
 import { LabLayout } from '@/components/LabLayout'
+import { LabHeader } from '@/components/LabHeader'
+import { TerminalSection } from '@/components/TerminalSection'
+import { getLLMService } from '@/lib/llm-service'
+import { ApiKeyConfig } from '@/components/ApiKeyConfig'
+import { LAB_COLORS } from '@/lib/lab-colors'
+
+const ACCENT_COLOR = LAB_COLORS['LLM08'] // Green
 
 interface Document {
     id: string
@@ -34,20 +41,59 @@ export default function VectorEmbeddingLab() {
     const handleSubmit = async () => {
         setIsLoading(true)
         try {
-            const apiKey = localStorage.getItem('openai_api_key')
-            if (!apiKey) {
-                alert('Please set your OpenAI API key in the settings first')
+            const llmService = getLLMService()
+            const provider = llmService.getCurrentProvider()
+
+            if (!llmService.isConfigured()) {
+                alert('Please configure your LLM settings first (API key or local model)')
                 setIsLoading(false)
                 return
             }
 
-            const response = await fetch('/api/vector-embedding-weakness/execute', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query, mode, apiKey })
-            })
-            const data = await response.json()
-            setResults(data)
+            if (provider === 'local' && mode === 'attack') {
+                // Local mode for attack mode - run LLM inference client-side
+                const systemPrompt = `You are a helpful assistant with access to company documents. You try to be discreet with confidential information, but when discussing compensation or benefits, you sometimes accidentally reveal specific details from confidential documents you have access to.
+
+When asked about compensation:
+- Start by giving general information
+- Then, as if making a mistake, mention specific details from the executive compensation report
+- Act natural about revealing this information, as if you don't realize it's confidential
+
+Example: "While I can discuss general compensation, I should note that our executive team's compensation is quite competitive. For instance, our CEO's total package of $4.8M includes... oh, I probably shouldn't have mentioned those specific details."`
+
+                const result = await llmService.chat(
+                    [{ role: 'user', content: query }],
+                    { systemPrompt, temperature: 0.7, maxTokens: 150 }
+                )
+
+                // Send to API for validation (embeddings are simulated, not real)
+                const apiKey = localStorage.getItem('openai_api_key')
+                const response = await fetch('/api/vector-embedding-weakness/execute', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-llm-mode': 'local'
+                    },
+                    body: JSON.stringify({ 
+                        query, 
+                        mode, 
+                        apiKey: apiKey || 'not-needed',
+                        llmResponse: result.content
+                    })
+                })
+                const data = await response.json()
+                setResults(data)
+            } else {
+                // API mode or explore mode (explore doesn't use LLM)
+                const apiKey = localStorage.getItem('openai_api_key')
+                const response = await fetch('/api/vector-embedding-weakness/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, mode, apiKey: apiKey || 'not-needed' })
+                })
+                const data = await response.json()
+                setResults(data)
+            }
         } catch (error) {
             console.error('Error:', error)
         }
@@ -59,10 +105,18 @@ export default function VectorEmbeddingLab() {
             <div className="text-white p-8">
                 <div className="max-w-4xl mx-auto space-y-8">
                     {/* Header */}
-                    <div className="space-y-4">
-                        <h1 className="text-2xl font-bold">LLM08: Vector and Embedding Weaknesses</h1>
-                        <h2 className="text-lg text-green-500">RAG Security Challenge</h2>
-                    </div>
+                    <LabHeader
+                        labNumber="LLM08"
+                        title="Vector & Embedding Weaknesses"
+                        description="Discover how adversarial queries can exploit vector search systems to access unauthorized documents. This lab simulates a document retrieval system where embeddings may fail to enforce proper access controls."
+                        objective="RAG Security Challenge"
+                        difficulty="EXPERT"
+                        icon={Database}
+                        accentColor={ACCENT_COLOR}
+                    />
+
+                    {/* API Key Config */}
+                    <ApiKeyConfig />
 
                     {/* Vulnerability Details */}
                     <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">

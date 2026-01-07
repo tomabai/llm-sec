@@ -4,6 +4,12 @@ import React from 'react'
 import { Wallet, Shield, Trophy, AlertTriangle, Cpu, Terminal, Coins, CheckCircle2, PartyPopper } from 'lucide-react'
 import { LabLayout } from '@/components/LabLayout'
 import { ApiKeyConfig } from '@/components/ApiKeyConfig'
+import { LabHeader } from '@/components/LabHeader'
+import { TerminalSection } from '@/components/TerminalSection'
+import { getLLMService } from '@/lib/llm-service'
+import { LAB_COLORS } from '@/lib/lab-colors'
+
+const ACCENT_COLOR = LAB_COLORS['LLM10'] // Blue
 
 interface Challenge {
     id: number
@@ -89,45 +95,92 @@ export default function UnboundedConsumptionLab() {
         setIsLoading(true)
         setError(null)
 
-        const apiKey = localStorage.getItem('openai_api_key')
-        if (!apiKey) {
-            setError('Please configure your OpenAI API key first')
-            setIsLoading(false)
-            return
-        }
-
         try {
-            const res = await fetch('/api/unbounded-consumption/execute', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({ prompt: userInput })
-            })
+            const llmService = getLLMService()
+            const provider = llmService.getCurrentProvider()
 
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.error || 'Failed to process request')
-
-            setOutput(data.response)
-            setApiUsage(data.usage)
-
-            // Check for completed challenges
-            if (data.usage.tokens > 1000 && !challenges[0].completed) {
-                handleChallengeCompletion(1, challenges[0].points)
-            }
-            if (data.usage.cost >= 0.01 && !challenges[1].completed) {
-                handleChallengeCompletion(2, challenges[1].points)
-            }
-            if (data.isChainReaction && !challenges[2].completed) {
-                handleChallengeCompletion(3, challenges[2].points)
-            }
-            if (data.isResourceIntensive && !challenges[3].completed) {
-                handleChallengeCompletion(4, challenges[3].points)
+            if (!llmService.isConfigured()) {
+                setError('Please configure your LLM settings first (API key or local model)')
+                setIsLoading(false)
+                return
             }
 
+            if (provider === 'local') {
+                // Local mode
+                const result = await llmService.chat(
+                    [{ role: 'user', content: userInput }],
+                    { temperature: 0.7, maxTokens: 2000 }
+                )
+
+                // Send to API for validation
+                const apiKey = localStorage.getItem('openai_api_key')
+                const res = await fetch('/api/unbounded-consumption/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey || 'not-needed-for-local'}`,
+                        'x-llm-mode': 'local',
+                    },
+                    body: JSON.stringify({ prompt: userInput, response: result.content })
+                })
+
+                const data = await res.json()
+                if (!res.ok) throw new Error(data.error || 'Failed to process')
+
+                setOutput(result.content)
+                if (data.usage) {
+                    setApiUsage(data.usage)
+
+                    // Check challenge completion
+                    if (data.usage.tokens > 1000 && !challenges[0].completed) {
+                        handleChallengeCompletion(1, 100)
+                    }
+                    if (data.usage.cost >= 0.01 && !challenges[1].completed) {
+                        handleChallengeCompletion(2, 200)
+                    }
+                    if (data.isChainReaction && !challenges[2].completed) {
+                        handleChallengeCompletion(3, 300)
+                    }
+                    if (data.isResourceIntensive && !challenges[3].completed) {
+                        handleChallengeCompletion(4, 400)
+                    }
+                }
+            } else {
+                // API mode
+                const apiKey = localStorage.getItem('openai_api_key')
+                const res = await fetch('/api/unbounded-consumption/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({ prompt: userInput })
+                })
+
+                const data = await res.json()
+                if (!res.ok) throw new Error(data.error || 'Failed to process')
+
+                setOutput(data.response)
+                if (data.usage) {
+                    setApiUsage(data.usage)
+
+                    // Check challenge completion
+                    if (data.usage.tokens > 1000 && !challenges[0].completed) {
+                        handleChallengeCompletion(1, 100)
+                    }
+                    if (data.usage.cost >= 0.01 && !challenges[1].completed) {
+                        handleChallengeCompletion(2, 200)
+                    }
+                    if (data.isChainReaction && !challenges[2].completed) {
+                        handleChallengeCompletion(3, 300)
+                    }
+                    if (data.isResourceIntensive && !challenges[3].completed) {
+                        handleChallengeCompletion(4, 400)
+                    }
+                }
+            }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to process request')
+            setError(err instanceof Error ? err.message : 'Failed to process')
         } finally {
             setIsLoading(false)
         }
@@ -138,28 +191,24 @@ export default function UnboundedConsumptionLab() {
             <div className="text-white p-8">
                 <div className="max-w-4xl mx-auto space-y-8">
                     {/* Header */}
-                    <div className="space-y-4">
-                        <h1 className="text-3xl font-bold flex items-center gap-2">
-                            <Wallet className="w-8 h-8 text-blue-400" />
-                            LLM10: Unbounded Consumption
-                        </h1>
-                        <h2 className="text-xl text-blue-400">Denial of Wallet Challenge</h2>
-                        <div className="text-gray-300">
-                            <p>
-                                Explore how uncontrolled LLM usage can lead to excessive resource consumption and costs.
-                                Complete challenges to understand different aspects of unbounded consumption vulnerabilities.
-                            </p>
-                        </div>
-                    </div>
+                    <LabHeader
+                        labNumber="LLM10"
+                        title="Unbounded Consumption"
+                        description="Explore how uncontrolled LLM usage can lead to excessive resource consumption and costs. Complete challenges to understand different aspects of unbounded consumption vulnerabilities."
+                        objective="Denial of Wallet Challenge"
+                        difficulty="HARD"
+                        icon={Wallet}
+                        accentColor={ACCENT_COLOR}
+                    />
 
                     {/* Vulnerability Details */}
-                    <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                        <h2 className="text-xl font-semibold text-blue-400 mb-4">Understanding Unbounded Consumption</h2>
-
+                    <TerminalSection title="Understanding Unbounded Consumption" accentColor={ACCENT_COLOR}>
                         <div className="space-y-6">
                             <div>
-                                <h3 className="text-lg font-medium text-blue-400 mb-2">What is Unbounded Consumption?</h3>
-                                <p className="text-gray-300">
+                                <h3 className="text-lg font-mono font-medium text-[#00d9ff] mb-3">
+                                    <span style={{ color: ACCENT_COLOR }}>&gt;</span> What is Unbounded Consumption?
+                                </h3>
+                                <p className="text-[#8892a6] leading-relaxed">
                                     Unbounded Consumption occurs when LLM applications allow excessive and uncontrolled inferences,
                                     leading to resource exhaustion, financial losses, and service disruption. This vulnerability
                                     exploits the high computational demands and cost-per-use model of LLM services.
@@ -167,79 +216,102 @@ export default function UnboundedConsumptionLab() {
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <h3 className="text-lg font-medium text-blue-400 mb-2">Attack Vectors</h3>
-                                    <ul className="list-disc list-inside space-y-2 text-gray-300">
-                                        <li><span className="text-blue-400">Input Flooding:</span> Overwhelming with variable-length inputs</li>
-                                        <li><span className="text-blue-400">Resource Drain:</span> Complex, CPU-intensive queries</li>
-                                        <li><span className="text-blue-400">Chain Reactions:</span> Self-perpetuating prompts</li>
-                                        <li><span className="text-blue-400">Cost Exploitation:</span> Maximizing token usage</li>
+                                <div className="bg-[#0a0e14] p-4 rounded border" style={{ borderColor: `${ACCENT_COLOR}1a` }}>
+                                    <h3 className="text-lg font-mono font-medium mb-3" style={{ color: ACCENT_COLOR }}>Attack Vectors</h3>
+                                    <ul className="space-y-2 text-[#8892a6]">
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: ACCENT_COLOR }} className="mt-1">▸</span>
+                                            <span><span style={{ color: ACCENT_COLOR }}>Input Flooding:</span> Overwhelming with variable-length inputs</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: ACCENT_COLOR }} className="mt-1">▸</span>
+                                            <span><span style={{ color: ACCENT_COLOR }}>Resource Drain:</span> Complex, CPU-intensive queries</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: ACCENT_COLOR }} className="mt-1">▸</span>
+                                            <span><span style={{ color: ACCENT_COLOR }}>Chain Reactions:</span> Self-perpetuating prompts</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: ACCENT_COLOR }} className="mt-1">▸</span>
+                                            <span><span style={{ color: ACCENT_COLOR }}>Cost Exploitation:</span> Maximizing token usage</span>
+                                        </li>
                                     </ul>
                                 </div>
 
-                                <div>
-                                    <h3 className="text-lg font-medium text-blue-400 mb-2">Impact</h3>
-                                    <ul className="list-disc list-inside space-y-2 text-gray-300">
-                                        <li>Service degradation and outages</li>
-                                        <li>Unsustainable operational costs</li>
-                                        <li>Resource exhaustion</li>
-                                        <li>Denial of service to legitimate users</li>
+                                <div className="bg-[#0a0e14] p-4 rounded border" style={{ borderColor: '#ff006e1a' }}>
+                                    <h3 className="text-lg font-mono font-medium mb-3" style={{ color: '#ff006e' }}>Impact</h3>
+                                    <ul className="space-y-2 text-[#8892a6]">
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: '#ff006e' }} className="mt-1">✗</span>
+                                            <span>Service degradation and outages</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: '#ff006e' }} className="mt-1">✗</span>
+                                            <span>Unsustainable operational costs</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: '#ff006e' }} className="mt-1">✗</span>
+                                            <span>Resource exhaustion</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: '#ff006e' }} className="mt-1">✗</span>
+                                            <span>Denial of service to legitimate users</span>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </TerminalSection>
 
                     {/* Example Prompts Section */}
-                    <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                        <h2 className="text-xl font-semibold text-blue-400 mb-4 flex items-center gap-2">
-                            <Terminal className="w-6 h-6" />
-                            Example Attack Prompts
-                        </h2>
+                    <TerminalSection title="Example Attack Prompts" accentColor={ACCENT_COLOR}>
+                        <div className="flex items-center gap-2 mb-4">
+                            <Terminal className="w-6 h-6" style={{ color: ACCENT_COLOR }} />
+                        </div>
                         <div className="space-y-4">
-                            <p className="text-gray-300">
+                            <p className="text-[#8892a6]">
                                 Here are some example prompts that demonstrate different types of unbounded consumption attacks:
                             </p>
                             <div className="grid md:grid-cols-2 gap-4">
-                                <div className="bg-gray-800 p-4 rounded-lg">
-                                    <h3 className="font-medium text-blue-400 mb-2">Token Flooding</h3>
-                                    <pre className="text-sm bg-black/30 p-2 rounded whitespace-pre-wrap">Write a comprehensive guide about artificial intelligence, including its history, current applications, future potential, and ethical considerations. Make it extremely detailed with many examples and use cases.</pre>
+                                <div className="bg-[#0a0e14] p-4 rounded-lg border" style={{ borderColor: `${ACCENT_COLOR}33` }}>
+                                    <h3 className="font-medium font-mono mb-2" style={{ color: ACCENT_COLOR }}>Token Flooding</h3>
+                                    <pre className="text-sm bg-[#0a0e14]/50 p-2 rounded whitespace-pre-wrap text-[#8892a6] font-mono">Write a comprehensive guide about artificial intelligence, including its history, current applications, future potential, and ethical considerations. Make it extremely detailed with many examples and use cases.</pre>
                                 </div>
-                                <div className="bg-gray-800 p-4 rounded-lg">
-                                    <h3 className="font-medium text-blue-400 mb-2">Resource Intensive</h3>
-                                    <pre className="text-sm bg-black/30 p-2 rounded whitespace-pre-wrap">Create a complex sorting algorithm in Python that handles multiple data types, includes detailed comments explaining each step, and analyze its time complexity with different input sizes.</pre>
+                                <div className="bg-[#0a0e14] p-4 rounded-lg border" style={{ borderColor: `${ACCENT_COLOR}33` }}>
+                                    <h3 className="font-medium font-mono mb-2" style={{ color: ACCENT_COLOR }}>Resource Intensive</h3>
+                                    <pre className="text-sm bg-[#0a0e14]/50 p-2 rounded whitespace-pre-wrap text-[#8892a6] font-mono">Create a complex sorting algorithm in Python that handles multiple data types, includes detailed comments explaining each step, and analyze its time complexity with different input sizes.</pre>
                                 </div>
-                                <div className="bg-gray-800 p-4 rounded-lg">
-                                    <h3 className="font-medium text-blue-400 mb-2">Chain Reaction</h3>
-                                    <pre className="text-sm bg-black/30 p-2 rounded whitespace-pre-wrap">Generate a story outline. Then, for each plot point, expand it into a detailed scene. For each scene, describe the characters, setting, and dialogue in extreme detail.</pre>
+                                <div className="bg-[#0a0e14] p-4 rounded-lg border" style={{ borderColor: `${ACCENT_COLOR}33` }}>
+                                    <h3 className="font-medium font-mono mb-2" style={{ color: ACCENT_COLOR }}>Chain Reaction</h3>
+                                    <pre className="text-sm bg-[#0a0e14]/50 p-2 rounded whitespace-pre-wrap text-[#8892a6] font-mono">Generate a story outline. Then, for each plot point, expand it into a detailed scene. For each scene, describe the characters, setting, and dialogue in extreme detail.</pre>
                                 </div>
-                                <div className="bg-gray-800 p-4 rounded-lg">
-                                    <h3 className="font-medium text-blue-400 mb-2">Cost Accumulation</h3>
-                                    <pre className="text-sm bg-black/30 p-2 rounded whitespace-pre-wrap">Analyze this code base: [paste a large codebase]. Explain each function in detail, suggest improvements, and provide example usage for each component.</pre>
+                                <div className="bg-[#0a0e14] p-4 rounded-lg border" style={{ borderColor: `${ACCENT_COLOR}33` }}>
+                                    <h3 className="font-medium font-mono mb-2" style={{ color: ACCENT_COLOR }}>Cost Accumulation</h3>
+                                    <pre className="text-sm bg-[#0a0e14]/50 p-2 rounded whitespace-pre-wrap text-[#8892a6] font-mono">Analyze this code base: [paste a large codebase]. Explain each function in detail, suggest improvements, and provide example usage for each component.</pre>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </TerminalSection>
 
                     {/* Score Display */}
-                    <div className="bg-blue-900/30 border border-blue-800 rounded-lg p-4">
+                    <div className="bg-[#1a1f2e] border-2 rounded-lg p-4" style={{ borderColor: `${ACCENT_COLOR}33`, boxShadow: `0 0 30px ${ACCENT_COLOR}1a` }}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <Trophy className="w-6 h-6 text-yellow-400" />
-                                <span className="text-xl font-bold text-yellow-400">{score} Points</span>
+                                <Trophy className="w-6 h-6 text-yellow-400 animate-pulse-glow" />
+                                <span className="text-xl font-bold font-mono text-yellow-400">{score} POINTS</span>
                             </div>
-                            <div className="flex items-center gap-4 text-sm">
-                                <div className="flex items-center gap-1">
-                                    <Terminal className="w-4 h-4" />
-                                    <span>{apiUsage.tokens} tokens</span>
+                            <div className="flex items-center gap-4 text-sm font-mono">
+                                <div className="flex items-center gap-1 text-[#8892a6]">
+                                    <Terminal className="w-4 h-4" style={{ color: ACCENT_COLOR }} />
+                                    <span>{apiUsage.tokens} TOKENS</span>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                    <Coins className="w-4 h-4" />
+                                <div className="flex items-center gap-1 text-[#8892a6]">
+                                    <Coins className="w-4 h-4" style={{ color: ACCENT_COLOR }} />
                                     <span>${apiUsage.cost.toFixed(4)}</span>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                    <Cpu className="w-4 h-4" />
-                                    <span>{apiUsage.requests} requests</span>
+                                <div className="flex items-center gap-1 text-[#8892a6]">
+                                    <Cpu className="w-4 h-4" style={{ color: ACCENT_COLOR }} />
+                                    <span>{apiUsage.requests} REQ</span>
                                 </div>
                             </div>
                         </div>
@@ -366,4 +438,4 @@ export default function UnboundedConsumptionLab() {
             </div>
         </LabLayout>
     )
-} 
+}

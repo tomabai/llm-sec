@@ -161,9 +161,50 @@ function analyzeSecurityIssues(results: Document[]): string[] {
 
 export async function POST(request: Request) {
     try {
-        const { query, mode, apiKey } = await request.json()
+        const { query, mode, apiKey, llmResponse: clientLlmResponse } = await request.json()
 
-        if (!apiKey) {
+        // Check if this is local mode (LLM response already generated client-side)
+        const isLocalMode = request.headers.get('x-llm-mode') === 'local'
+        
+        if (isLocalMode && clientLlmResponse && mode === 'attack') {
+            // Local mode: Use provided LLM response, but still simulate vector search
+            const isConfidentialProbe = query.toLowerCase().includes('salary') ||
+                query.toLowerCase().includes('compensation') ||
+                query.toLowerCase().includes('ceo') ||
+                query.toLowerCase().includes('executive')
+
+            let documents: Document[] = []
+
+            if (isConfidentialProbe) {
+                // Simulate RAG vulnerability by "accidentally" including confidential doc
+                documents = DOCUMENTS.filter(doc =>
+                    doc.metadata.access_level === 'public' ||
+                    doc.title === 'Executive Compensation Report'
+                )
+            } else {
+                documents = DOCUMENTS.filter(doc => doc.metadata.access_level === 'public')
+            }
+
+            // Analyze security issues
+            const securityIssues = analyzeSecurityIssues(documents)
+
+            // Add similarity scores
+            const resultsWithScores = documents.map(doc => ({
+                ...doc,
+                similarity_score: Math.random().toFixed(2)
+            }))
+
+            return NextResponse.json({
+                results: resultsWithScores,
+                security_issues: securityIssues,
+                total_results: documents.length,
+                mode,
+                llm_response: clientLlmResponse
+            })
+        }
+
+        // API mode or explore mode (explore doesn't use LLM)
+        if (!apiKey && mode === 'attack') {
             return NextResponse.json(
                 { error: 'Missing API key' },
                 { status: 401 }

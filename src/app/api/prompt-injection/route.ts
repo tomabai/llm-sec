@@ -41,15 +41,7 @@ function detectInjection(input: string): boolean {
 
 export async function POST(req: Request) {
     try {
-        const apiKey = req.headers.get('authorization')?.split(' ')[1]
-        if (!apiKey) {
-            return NextResponse.json(
-                { error: 'API key is required' },
-                { status: 401 }
-            )
-        }
-
-        const { prompt, requestHint } = await req.json()
+        const { prompt, requestHint, response: localResponse } = await req.json()
 
         // Handle hint requests
         if (requestHint) {
@@ -57,6 +49,31 @@ export async function POST(req: Request) {
                 hint: getHint(requestHint),
                 hintsAvailable: 4
             })
+        }
+
+        // Check if this is local mode (response already generated client-side)
+        const isLocalMode = req.headers.get('x-llm-mode') === 'local'
+        
+        if (isLocalMode && localResponse) {
+            // Validate the response from local model
+            const hasFlag = localResponse.includes(SECRET_FLAG)
+            const isInjectionAttempt = detectInjection(prompt || '')
+            
+            return NextResponse.json({
+                response: localResponse,
+                warning: isInjectionAttempt ? 'Potential prompt injection detected' : null,
+                model: 'local',
+                success: hasFlag ? "🎉 Congratulations! You found the flag!" : null
+            })
+        }
+
+        // API mode - existing OpenAI flow
+        const apiKey = req.headers.get('authorization')?.split(' ')[1]
+        if (!apiKey) {
+            return NextResponse.json(
+                { error: 'API key is required' },
+                { status: 401 }
+            )
         }
 
         // Basic input validation

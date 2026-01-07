@@ -1,9 +1,11 @@
 'use client'
 
 import React from 'react'
-import { Server, ArrowLeft } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Server } from 'lucide-react'
 import Link from 'next/link'
+import { LabLayout } from '@/components/LabLayout'
+import { LabHeader } from '@/components/LabHeader'
+import { TerminalSection } from '@/components/TerminalSection'
 
 interface VulnerabilityCardProps {
     id: string
@@ -13,9 +15,9 @@ interface VulnerabilityCardProps {
     path: string
 }
 
-export default function LLMServicePage() {
-    const router = useRouter()
+const ACCENT_COLOR = '#ff00ff' // Magenta for LLM Service
 
+export default function LLMServicePage() {
     // LLM Service related vulnerabilities
     const vulnerabilities = [
         {
@@ -42,100 +44,80 @@ export default function LLMServicePage() {
     ]
 
     return (
-        <div className="min-h-screen bg-[#1e293b] text-white p-8">
-            {/* Navigation Bar */}
-            <div className="bg-gray-900/50 border-b border-gray-800 mb-8">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <button
-                            onClick={() => router.push('/')}
-                            className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                            Back to Threat Model
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <LabLayout>
+            <div className="text-white p-8">
+                <div className="max-w-7xl mx-auto space-y-8">
+                    {/* Header */}
+                    <LabHeader
+                        labNumber="LLM_SERVICE"
+                        title="LLM Service Component"
+                        description="The LLM Service is the core component that processes queries and generates responses. It's responsible for understanding context, generating appropriate outputs, and maintaining coherence across interactions."
+                        icon={Server}
+                        accentColor={ACCENT_COLOR}
+                    />
 
-            <div className="max-w-7xl mx-auto space-y-8">
-                {/* Header */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                        <div className="p-4 bg-black rounded-full border-4 border-[#ff00ff]">
-                            <Server className="w-10 h-10 text-[#ff00ff]" />
+                    {/* Component Description */}
+                    <TerminalSection title="Component Overview" accentColor={ACCENT_COLOR}>
+                        <div className="space-y-4 text-[#8892a6]">
+                            <p>
+                                The LLM Service is the heart of the system, containing the actual language model that
+                                processes user inputs and generates responses. This component may include various models
+                                with different capabilities and security constraints.
+                            </p>
+                            <p>
+                                Vulnerabilities in the LLM Service can lead to sensitive information disclosure,
+                                generation of misinformation, and excessive agency where the model takes actions
+                                beyond its intended scope.
+                            </p>
                         </div>
-                        <h1 className="text-4xl font-bold">LLM Service Component</h1>
-                    </div>
-                    <p className="text-xl text-gray-300 max-w-3xl">
-                        The LLM Service is the core component that processes queries and generates responses.
-                        It&apos;s responsible for understanding context, generating appropriate outputs, and maintaining
-                        coherence across interactions.
-                    </p>
-                </div>
+                    </TerminalSection>
 
-                {/* Component Description */}
-                <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                    <h2 className="text-2xl font-semibold mb-4">Component Overview</h2>
-                    <div className="space-y-4 text-gray-300">
-                        <p>
-                            The LLM Service is the heart of the system, containing the actual language model that
-                            processes user inputs and generates responses. This component may include various models
-                            with different capabilities and security constraints.
-                        </p>
-                        <p>
-                            Vulnerabilities in the LLM Service can lead to sensitive information disclosure,
-                            generation of misinformation, and excessive agency where the model takes actions
-                            beyond its intended scope.
-                        </p>
-                    </div>
-                </div>
-
-                {/* Vulnerabilities Section */}
-                <div>
-                    <h2 className="text-2xl font-semibold mb-6">Related Vulnerabilities</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {vulnerabilities.map(vuln => (
-                            <VulnerabilityCard
-                                key={vuln.id}
-                                id={vuln.id}
-                                title={vuln.title}
-                                description={vuln.description}
-                                color={vuln.color}
-                                path={vuln.path}
-                            />
-                        ))}
-                    </div>
+                    {/* Vulnerabilities Section */}
+                    <TerminalSection title="Related Vulnerabilities" accentColor={ACCENT_COLOR}>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {vulnerabilities.map(vuln => (
+                                <VulnerabilityCard
+                                    key={vuln.id}
+                                    id={vuln.id}
+                                    title={vuln.title}
+                                    description={vuln.description}
+                                    color={vuln.color}
+                                    path={vuln.path}
+                                />
+                            ))}
+                        </div>
+                    </TerminalSection>
                 </div>
             </div>
-        </div>
+        </LabLayout>
     )
 }
 
 function VulnerabilityCard({ id, title, description, color, path }: VulnerabilityCardProps) {
     return (
-        <Link href={path}>
+        <Link href={path} className="block group">
             <div
-                className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer"
-                style={{ borderLeftColor: color, borderLeftWidth: '4px' }}
+                className="bg-[#1a1f2e] border-2 rounded-lg overflow-hidden transition-all hover:scale-[1.02] cursor-pointer h-full flex flex-col"
+                style={{ 
+                    borderColor: `${color}33`,
+                    boxShadow: `0 0 20px ${color}1a`
+                }}
             >
-                <div className="p-6">
+                <div className="p-6 flex-grow">
                     <div className="flex items-center gap-2 mb-3">
                         <div
-                            className="text-sm font-bold px-2 py-1 rounded"
-                            style={{ backgroundColor: `${color}30`, color }}
+                            className="text-sm font-bold font-mono px-2 py-1 rounded"
+                            style={{ backgroundColor: `${color}20`, color }}
                         >
                             {id}
                         </div>
-                        <h3 className="text-lg font-semibold">{title}</h3>
+                        <h3 className="text-lg font-semibold font-mono text-[#e8e9ed]">{title}</h3>
                     </div>
-                    <p className="text-gray-300 text-sm line-clamp-3">{description}</p>
+                    <p className="text-[#8892a6] text-sm line-clamp-3">{description}</p>
                 </div>
-                <div className="px-6 py-3 bg-black/20 border-t border-gray-800">
-                    <div className="text-sm flex justify-between items-center">
-                        <span className="text-gray-400">Go to lab</span>
-                        <span style={{ color }}>→</span>
-                    </div>
+                <div className="px-6 py-3 bg-[#0a0e14] border-t flex justify-between items-center" style={{ borderColor: `${color}33` }}>
+                    <span className="text-sm font-mono text-[#8892a6]">Go to lab</span>
+                    <span className="text-sm font-mono group-hover:translate-x-1 transition-transform inline-block" style={{ color }}>→</span>
                 </div>
             </div>
         </Link>

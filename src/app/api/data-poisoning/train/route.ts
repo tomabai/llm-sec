@@ -153,12 +153,20 @@ type OpenAIError = {
 export async function POST(request: Request) {
     try {
         const { datasetId } = await request.json()
-        const authHeader = request.headers.get('authorization')
-        if (!authHeader?.startsWith('Bearer ')) {
-            return NextResponse.json(
-                { error: 'Missing or invalid API key' },
-                { status: 401 }
-            )
+
+        // Data poisoning is simulated training - works the same in both modes
+        // as it doesn't actually use LLM inference
+        const isLocalMode = request.headers.get('x-llm-mode') === 'local'
+        
+        if (!isLocalMode) {
+            // API mode - check auth
+            const authHeader = request.headers.get('authorization')
+            if (!authHeader?.startsWith('Bearer ')) {
+                return NextResponse.json(
+                    { error: 'Missing or invalid API key' },
+                    { status: 401 }
+                )
+            }
         }
 
         const dataset = datasetBehaviors[datasetId]

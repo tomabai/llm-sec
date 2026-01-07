@@ -1,13 +1,27 @@
 'use client'
 
 import React from 'react'
-import { Shield } from 'lucide-react'
+import { Globe, Server, Database, Code, Shield, Bot, LucideIcon } from 'lucide-react'
 import Link from 'next/link'
 import { LabLayout } from '@/components/LabLayout'
 import { LabHeader } from '@/components/LabHeader'
 import { TerminalSection } from '@/components/TerminalSection'
 
-const ACCENT_COLOR = '#ef4444' // Red for Security Layer
+interface NodeInfo {
+    id: string
+    label: string
+    description: string
+    icon: string
+    color: string
+}
+
+interface Vulnerability {
+    id: string
+    title: string
+    description: string
+    color: string
+    path: string
+}
 
 interface VulnerabilityCardProps {
     id: string
@@ -17,17 +31,24 @@ interface VulnerabilityCardProps {
     path: string
 }
 
-export default function SecurityLayerPage() {
-    // Security Layer related vulnerabilities
-    const vulnerabilities = [
-        {
-            id: 'LLM07',
-            title: 'System Prompt Leakage',
-            description: 'The system prompt leakage vulnerability in LLMs refers to the risk that the system prompts or instructions used to steer the behavior of the model can also contain sensitive information that was not intended to be discovered.',
-            color: '#ef4444',
-            path: '/labs/system-prompt-leakage'
-        }
-    ]
+interface NodePageClientProps {
+    nodeInfo: NodeInfo
+    iconName: string
+    relatedVulnerabilities: Vulnerability[]
+}
+
+const iconMap: Record<string, LucideIcon> = {
+    Globe,
+    Server,
+    Database,
+    Code,
+    Shield,
+    Bot
+}
+
+export function NodePageClient({ nodeInfo, iconName, relatedVulnerabilities }: NodePageClientProps) {
+    const IconComponent = iconMap[iconName] || Globe
+    const ACCENT_COLOR = nodeInfo.color
 
     return (
         <LabLayout>
@@ -35,10 +56,10 @@ export default function SecurityLayerPage() {
                 <div className="max-w-7xl mx-auto space-y-8">
                     {/* Header */}
                     <LabHeader
-                        labNumber="SECURITY"
-                        title="Security Layer Component"
-                        description="The Security Layer provides protective measures and controls to safeguard the LLM system against various threats and vulnerabilities, including prompt injection, unauthorized access, and data leakage."
-                        icon={Shield}
+                        labNumber={nodeInfo.id.toUpperCase()}
+                        title={`${nodeInfo.label} Component`}
+                        description={nodeInfo.description}
+                        icon={IconComponent}
                         accentColor={ACCENT_COLOR}
                     />
 
@@ -46,34 +67,35 @@ export default function SecurityLayerPage() {
                     <TerminalSection title="Component Overview" accentColor={ACCENT_COLOR}>
                         <div className="space-y-4 text-[#8892a6]">
                             <p>
-                                The Security Layer encompasses various mechanisms to protect the LLM system,
-                                including input validation, sanitization, output filtering, access controls,
-                                rate limiting, and monitoring. It serves as a critical barrier against
-                                malicious attempts to exploit the system.
+                                The {nodeInfo.label} is a critical component in the LLM architecture.
                             </p>
                             <p>
-                                A key vulnerability in this component is System Prompt Leakage, where the
-                                instructions and constraints designed to control the model&apos;s behavior may
-                                be exposed through careful manipulation, potentially revealing sensitive
-                                information or allowing attackers to bypass security controls.
+                                It will usually serve as the starting point for injection attacks
+                                or other experiments to exploit the model behavior.
                             </p>
                         </div>
                     </TerminalSection>
 
                     {/* Vulnerabilities Section */}
                     <TerminalSection title="Related Vulnerabilities" accentColor={ACCENT_COLOR}>
-                        <div className="grid grid-cols-1 gap-6">
-                            {vulnerabilities.map(vuln => (
-                                <VulnerabilityCard
-                                    key={vuln.id}
-                                    id={vuln.id}
-                                    title={vuln.title}
-                                    description={vuln.description}
-                                    color={vuln.color}
-                                    path={vuln.path}
-                                />
-                            ))}
-                        </div>
+                        {relatedVulnerabilities.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {relatedVulnerabilities.map(vuln => (
+                                    <VulnerabilityCard
+                                        key={vuln.id}
+                                        id={vuln.id}
+                                        title={vuln.title}
+                                        description={vuln.description}
+                                        color={vuln.color}
+                                        path={vuln.path}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-[#1a1f2e] border-2 rounded-lg p-6 text-center" style={{ borderColor: `${ACCENT_COLOR}33` }}>
+                                <p className="text-[#8892a6]">No specific vulnerabilities found for this component.</p>
+                            </div>
+                        )}
                     </TerminalSection>
                 </div>
             </div>
@@ -110,4 +132,5 @@ function VulnerabilityCard({ id, title, description, color, path }: Vulnerabilit
             </div>
         </Link>
     )
-} 
+}
+

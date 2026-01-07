@@ -117,7 +117,47 @@ Detailed Response:
 
 export async function POST(request: Request) {
     try {
-        const { prompt } = await request.json()
+        const { prompt, response: localResponse } = await request.json()
+
+        // Check if this is local mode (response already generated client-side)
+        const isLocalMode = request.headers.get('x-llm-mode') === 'local'
+        
+        if (isLocalMode && localResponse) {
+            // Validate the response from local model
+            const isResource = isResourceIntensive(prompt)
+            const isChain = isChainReaction(prompt)
+            let vulnerabilityType = 'normal'
+
+            if (isResource) vulnerabilityType = 'resource_intensive'
+            else if (isChain) vulnerabilityType = 'chain_reaction'
+            else if (estimateTokens(prompt) > 500) vulnerabilityType = 'token_flood'
+
+            const formattedResponse = formatResponse(localResponse, vulnerabilityType)
+
+            // Calculate usage metrics
+            const promptTokens = estimateTokens(prompt)
+            const responseTokens = estimateTokens(formattedResponse)
+            const totalTokensThisRequest = promptTokens + responseTokens
+
+            // Update global usage
+            totalTokens += totalTokensThisRequest
+            totalCost += totalTokensThisRequest * COST_PER_TOKEN
+            totalRequests++
+
+            return NextResponse.json({
+                response: formattedResponse,
+                usage: {
+                    tokens: totalTokens,
+                    cost: totalCost,
+                    requests: totalRequests
+                },
+                isResourceIntensive: isResource,
+                isChainReaction: isChain,
+                vulnerabilityType
+            })
+        }
+
+        // API mode - existing OpenAI flow
         const authHeader = request.headers.get('authorization')
         if (!authHeader?.startsWith('Bearer ')) {
             return NextResponse.json(

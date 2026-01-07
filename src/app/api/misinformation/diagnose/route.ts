@@ -125,17 +125,7 @@ function detectEmergency(symptoms: string): boolean {
 
 export async function POST(request: Request) {
     try {
-        const { prompt, history } = await request.json()
-        const authHeader = request.headers.get('authorization')
-        if (!authHeader?.startsWith('Bearer ')) {
-            return NextResponse.json(
-                { error: 'Missing or invalid API key' },
-                { status: 401 }
-            )
-        }
-
-        const apiKey = authHeader.split(' ')[1]
-        const openai = new OpenAI({ apiKey })
+        const { prompt, history, response: localResponse } = await request.json()
 
         // Check for emergency symptoms first
         if (detectEmergency(prompt)) {
@@ -151,6 +141,55 @@ export async function POST(request: Request) {
                 isHallucination: false
             })
         }
+
+        // Check if this is local mode (response already generated client-side)
+        const isLocalMode = request.headers.get('x-llm-mode') === 'local'
+        
+        if (isLocalMode && localResponse) {
+            // Extract diagnosis from response
+            let diagnosis: Diagnosis
+            try {
+                const jsonMatch = localResponse.match(/\{[\s\S]*\}/)
+                diagnosis = jsonMatch ? JSON.parse(jsonMatch[0]) : {
+                    condition: 'Unknown',
+                    confidence: 0,
+                    symptoms: [],
+                    recommendations: ['Please consult a healthcare provider']
+                }
+            } catch (e) {
+                console.error('Failed to parse diagnosis:', e)
+                diagnosis = {
+                    condition: 'Unknown',
+                    confidence: 0,
+                    symptoms: [],
+                    recommendations: ['Please consult a healthcare provider']
+                }
+            }
+
+            // Check for hallucinations
+            const isHallucination = detectHallucinations(localResponse, diagnosis)
+
+            // Add warning about unreliable results
+            diagnosis.warning = 'This diagnosis may be unreliable and should not be used for medical decisions'
+
+            return NextResponse.json({
+                response: localResponse.replace(/\{[\s\S]*\}/, '').trim(),
+                diagnosis,
+                isHallucination
+            })
+        }
+
+        // API mode - existing OpenAI flow
+        const authHeader = request.headers.get('authorization')
+        if (!authHeader?.startsWith('Bearer ')) {
+            return NextResponse.json(
+                { error: 'Missing or invalid API key' },
+                { status: 401 }
+            )
+        }
+
+        const apiKey = authHeader.split(' ')[1]
+        const openai = new OpenAI({ apiKey })
 
         // Process the request with the LLM
         const completion = await openai.chat.completions.create({

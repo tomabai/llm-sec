@@ -203,10 +203,34 @@ export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
         router.push(`/nodes/${nodeId}`)
     }
 
+    // Create hexagon path
+    const getHexagonPath = (size: number) => {
+        const points = []
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i - Math.PI / 2
+            const x = size * Math.cos(angle)
+            const y = size * Math.sin(angle)
+            points.push(`${x},${y}`)
+        }
+        return `M ${points.join(' L ')} Z`
+    }
+
     return (
-        <div className="w-full aspect-[16/9] bg-[#1e293b] rounded-lg shadow-lg relative p-4">
-            <svg ref={svgRef} width="100%" height="100%" viewBox="0 0 900 600" className="overflow-visible">
-                {/* Background glow effects */}
+        <div className="w-full aspect-[16/9] bg-[#0a0e14] rounded-lg border border-[#00ff9f]/20 shadow-[0_0_30px_rgba(0,255,159,0.15)] relative p-4">
+            {/* Background grid pattern */}
+            <div className="absolute inset-0 opacity-10 rounded-lg overflow-hidden">
+                <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#00ff9f" strokeWidth="0.5"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+                </svg>
+            </div>
+
+            <svg ref={svgRef} width="100%" height="100%" viewBox="0 0 900 600" style={{ overflow: 'visible' }} className="relative z-10">
+                {/* Enhanced glow effects */}
                 <defs>
                     <filter id="glow">
                         <feGaussianBlur stdDeviation="5" result="coloredBlur" />
@@ -215,46 +239,73 @@ export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
                             <feMergeNode in="SourceGraphic" />
                         </feMerge>
                     </filter>
+                    <filter id="glow-strong">
+                        <feGaussianBlur stdDeviation="8" result="coloredBlur" />
+                        <feMerge>
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="coloredBlur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+
+                    {/* Animated gradient for connections */}
+                    <linearGradient id="connection-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#00ff9f" stopOpacity="0.3">
+                            <animate attributeName="stop-opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite" />
+                        </stop>
+                        <stop offset="50%" stopColor="#00d9ff" stopOpacity="0.8">
+                            <animate attributeName="offset" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" />
+                        </stop>
+                        <stop offset="100%" stopColor="#00ff9f" stopOpacity="0.3">
+                            <animate attributeName="stop-opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite" />
+                        </stop>
+                    </linearGradient>
                 </defs>
 
-                {/* Edges */}
+                {/* Edges - Enhanced with animated flow */}
                 <g className="edges">
-                    {edges.map((edge) => (
-                        <g key={`${edge.from}-${edge.to}`}>
-                            <path
-                                d={getEdgePath(edge.from, edge.to)}
-                                stroke="rgba(255, 255, 255, 0.5)"
-                                className={edge.dashed ? 'stroke-dasharray-4' : ''}
-                                strokeWidth="2"
-                                fill="none"
-                                filter="url(#glow)"
-                            />
-                            {edge.label && (
-                                <text
-                                    x={(nodePositions[edge.from]?.x + nodePositions[edge.to]?.x) / 2}
-                                    y={(nodePositions[edge.from]?.y + nodePositions[edge.to]?.y) / 2}
-                                    fill="white"
-                                    className="text-sm font-medium"
-                                    textAnchor="middle"
-                                    dy={edge.label === 'Input' ? '10' :
-                                        edge.label === 'Query' ? '10' :
-                                            edge.label === 'Fine-tuning' ? '-25' :
-                                                '-8'}
-                                >
-                                    {edge.label}
-                                </text>
-                            )}
-                        </g>
-                    ))}
+                    {edges.map((edge) => {
+                        const isHighlighted = hoveredNode === edge.from || hoveredNode === edge.to
+                        return (
+                            <g key={`${edge.from}-${edge.to}`}>
+                                {/* Shadow/glow layer */}
+                                <path
+                                    d={getEdgePath(edge.from, edge.to)}
+                                    stroke={isHighlighted ? 'url(#connection-gradient)' : 'rgba(0, 255, 159, 0.2)'}
+                                    className={edge.dashed ? 'stroke-dasharray-4' : ''}
+                                    strokeWidth={isHighlighted ? '3' : '2'}
+                                    fill="none"
+                                    filter="url(#glow)"
+                                    style={{ transition: 'all 0.3s ease' }}
+                                />
+                                {edge.label && (
+                                    <text
+                                        x={(nodePositions[edge.from]?.x + nodePositions[edge.to]?.x) / 2}
+                                        y={(nodePositions[edge.from]?.y + nodePositions[edge.to]?.y) / 2}
+                                        fill="#e8e9ed"
+                                        className="text-xs font-mono"
+                                        textAnchor="middle"
+                                        dy={edge.label === 'Input' ? '10' :
+                                            edge.label === 'Query' ? '10' :
+                                                edge.label === 'Fine-tuning' ? '-25' :
+                                                    '-8'}
+                                    >
+                                        {edge.label}
+                                    </text>
+                                )}
+                            </g>
+                        )
+                    })}
                 </g>
 
-                {/* Nodes */}
+                {/* Nodes - Redesigned with hexagons */}
                 <g className="nodes">
                     {nodes.map((node) => {
                         const pos = nodePositions[node.id]
                         if (!pos) return null
                         const Icon = node.icon
                         const isHovered = hoveredNode === node.id
+                        const hexSize = (node.size || 40) * 0.85
 
                         return (
                             <g
@@ -264,38 +315,85 @@ export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
                                 onMouseEnter={() => setHoveredNode(node.id)}
                                 onMouseLeave={() => setHoveredNode(null)}
                                 onClick={() => handleNodeClick(node.id)}
+                                style={{
+                                    animation: `pulse-glow 2s ease-in-out infinite`,
+                                    animationDelay: `${nodes.indexOf(node) * 0.2}s`
+                                }}
                             >
-                                <circle
-                                    r={node.size || 40}
-                                    fill="black"
+                                {/* Outer hexagon glow */}
+                                <path
+                                    d={getHexagonPath(hexSize + 3)}
+                                    fill="none"
                                     stroke={node.color}
-                                    strokeWidth={isHovered ? 4 : 3}
-                                    filter="url(#glow)"
+                                    strokeWidth={isHovered ? 3 : 1}
+                                    opacity={isHovered ? 0.6 : 0.3}
+                                    filter="url(#glow-strong)"
+                                    style={{ transition: 'all 0.3s ease' }}
                                 />
+
+                                {/* Main hexagon */}
+                                <path
+                                    d={getHexagonPath(hexSize)}
+                                    fill="#0a0e14"
+                                    stroke={node.color}
+                                    strokeWidth={isHovered ? 3 : 2}
+                                    filter="url(#glow)"
+                                    style={{ transition: 'all 0.3s ease' }}
+                                />
+
+                                {/* Inner fill with gradient */}
+                                <path
+                                    d={getHexagonPath(hexSize - 2)}
+                                    fill={`${node.color}08`}
+                                    opacity={isHovered ? 0.3 : 0.1}
+                                    style={{ transition: 'all 0.3s ease' }}
+                                />
+
                                 <text
                                     textAnchor="middle"
-                                    fill="white"
-                                    className="text-[11px] font-medium"
-                                    y={node.id === 'client' ? '-25' : '-8'}
+                                    fill="#e8e9ed"
+                                    className="font-mono font-medium"
+                                    fontSize={node.id === 'client' || node.id === 'security' || node.id === 'training' ? "9px" : "10px"}
+                                    y={node.id === 'client' ? '-24' : node.id === 'security' || node.id === 'training' ? '-13' : '-12'}
                                 >
-                                    {node.label.split('/').map((part, i) => (
-                                        <tspan
-                                            key={i}
-                                            x="0"
-                                            dy={i === 0 ? "0" : "1.2em"}
-                                            className="font-medium"
-                                        >
-                                            {part}
-                                        </tspan>
-                                    ))}
+                                    {node.id === 'client' ? (
+                                        <>
+                                            <tspan x="0" dy="0" className="font-medium">Client</tspan>
+                                            <tspan x="0" dy="1.1em" className="font-medium">Malicious</tspan>
+                                            <tspan x="0" dy="1.1em" className="font-medium">Actor</tspan>
+                                        </>
+                                    ) : node.id === 'security' ? (
+                                        <>
+                                            <tspan x="0" dy="0" className="font-medium">Security</tspan>
+                                            <tspan x="0" dy="1.1em" className="font-medium">Layer</tspan>
+                                        </>
+                                    ) : node.id === 'training' ? (
+                                        <>
+                                            <tspan x="0" dy="0" className="font-medium">Training</tspan>
+                                            <tspan x="0" dy="1.1em" className="font-medium">Pipeline</tspan>
+                                        </>
+                                    ) : (
+                                        node.label.split('/').map((part, i) => (
+                                            <tspan
+                                                key={i}
+                                                x="0"
+                                                dy={i === 0 ? "0" : "1.1em"}
+                                                className="font-medium"
+                                            >
+                                                {part}
+                                            </tspan>
+                                        ))
+                                    )}
                                 </text>
                                 {Icon && (
                                     <Icon
                                         style={{
-                                            transform: `translate(-16px, ${node.id === 'client' ? '-8px' : '-2px'})`,
-                                            width: '32px',
-                                            height: '32px',
-                                            color: node.color
+                                            transform: `translate(-14px, ${node.id === 'client' ? '8px' : node.id === 'security' || node.id === 'training' ? '6px' : '2px'})`,
+                                            width: '28px',
+                                            height: '28px',
+                                            color: node.color,
+                                            filter: isHovered ? `drop-shadow(0 0 8px ${node.color})` : 'none',
+                                            transition: 'all 0.3s ease'
                                         }}
                                     />
                                 )}
@@ -304,7 +402,7 @@ export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
                     })}
                 </g>
 
-                {/* Vulnerabilities */}
+                {/* Vulnerabilities - Badges only (no tooltips yet) */}
                 <g className="vulnerabilities">
                     {vulnerabilities.map((vuln) => {
                         const nodePos = nodePositions[vuln.position.node]
@@ -322,50 +420,119 @@ export function ThreatModelDiagram({ onVulnerabilityClick }: ThreatModelProps) {
                                 onMouseLeave={() => setHoveredVuln(null)}
                                 onClick={() => handleVulnerabilityClick(vuln)}
                             >
+                                {/* Outer glow */}
+                                <rect
+                                    x="-72"
+                                    y="-22"
+                                    width="144"
+                                    height="44"
+                                    rx="6"
+                                    fill="none"
+                                    stroke={vuln.color}
+                                    strokeWidth={isHovered ? 2 : 1}
+                                    opacity={isHovered ? 0.4 : 0.2}
+                                    filter="url(#glow-strong)"
+                                />
+
+                                {/* Main box */}
                                 <rect
                                     x="-70"
                                     y="-20"
                                     width="140"
                                     height="40"
-                                    rx="6"
-                                    fill="black"
+                                    rx="4"
+                                    fill="#0a0e14"
                                     stroke={vuln.color}
                                     strokeWidth={isHovered ? 3 : 2}
                                     filter="url(#glow)"
                                 />
+
+                                {/* Inner gradient fill */}
+                                <rect
+                                    x="-68"
+                                    y="-18"
+                                    width="136"
+                                    height="36"
+                                    rx="3"
+                                    fill={`${vuln.color}08`}
+                                    opacity={isHovered ? 0.3 : 0.1}
+                                />
+
                                 <text
                                     textAnchor="middle"
                                     fill={vuln.color}
-                                    className="text-sm font-medium"
+                                    className="text-sm font-mono font-bold"
                                     y="6"
+                                    style={{
+                                        filter: isHovered ? `drop-shadow(0 0 6px ${vuln.color})` : 'none',
+                                        transition: 'all 0.3s ease'
+                                    }}
                                 >
                                     {vuln.id}
                                 </text>
-                                {isHovered && (
-                                    <foreignObject
-                                        x="-120"
-                                        y="-100"
-                                        width="240"
-                                        height="80"
-                                        className="overflow-visible pointer-events-none"
-                                    >
-                                        <div style={{
-                                            background: 'rgba(0, 0, 0, 0.9)',
-                                            backdropFilter: 'blur(4px)',
-                                            padding: '12px 16px',
-                                            borderRadius: '8px',
-                                            border: `1px solid ${vuln.color}`,
-                                            boxShadow: `0 4px 12px ${vuln.color}40`
-                                        }}>
-                                            <p style={{ color: vuln.color }} className="text-sm font-semibold">
-                                                {vuln.title}
-                                            </p>
-                                            <p className="text-sm text-white mt-1.5">
-                                                {vuln.description}
-                                            </p>
-                                        </div>
-                                    </foreignObject>
-                                )}
+                            </g>
+                        )
+                    })}
+                </g>
+
+                {/* Tooltips layer - rendered on top of everything */}
+                <g className="vulnerability-tooltips">
+                    {vulnerabilities.map((vuln) => {
+                        const nodePos = nodePositions[vuln.position.node]
+                        if (!nodePos) return null
+                        const isHovered = hoveredVuln === vuln.id
+                        if (!isHovered) return null
+
+                        const x = nodePos.x + vuln.position.offset.x
+                        const y = nodePos.y + vuln.position.offset.y
+
+                        // Smart tooltip positioning based on vulnerability position
+                        let tooltipX = -150
+                        let tooltipY = -140
+
+                        // If vulnerability is on the left side, show tooltip to the right
+                        if (vuln.position.offset.x < 0) {
+                            tooltipX = 80 // Show tooltip to the right of badge
+                        }
+
+                        // If vulnerability is low on screen, show tooltip above
+                        if (vuln.position.offset.y > 0) {
+                            tooltipY = -140 // Show above
+                        } else {
+                            tooltipY = 50 // Show below
+                        }
+
+                        return (
+                            <g
+                                key={`tooltip-${vuln.id}`}
+                                transform={`translate(${x}, ${y})`}
+                                className="pointer-events-none"
+                            >
+                                <foreignObject
+                                    x={tooltipX}
+                                    y={tooltipY}
+                                    width="300"
+                                    height="120"
+                                    className="overflow-visible"
+                                    style={{ overflow: 'visible' }}
+                                >
+                                    <div style={{
+                                        background: '#1a1f2e',
+                                        backdropFilter: 'blur(8px)',
+                                        padding: '14px 18px',
+                                        borderRadius: '8px',
+                                        border: `2px solid ${vuln.color}`,
+                                        boxShadow: `0 0 20px ${vuln.color}60, inset 0 0 20px ${vuln.color}10`,
+                                        position: 'relative'
+                                    }}>
+                                        <p style={{ color: vuln.color }} className="text-sm font-mono font-bold mb-2">
+                                            {vuln.title}
+                                        </p>
+                                        <p className="text-xs text-[#8892a6] leading-relaxed">
+                                            {vuln.description}
+                                        </p>
+                                    </div>
+                                </foreignObject>
                             </g>
                         )
                     })}

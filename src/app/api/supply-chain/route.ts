@@ -69,7 +69,30 @@ type OpenAIError = {
 
 export async function POST(request: Request) {
     try {
-        const { prompt, step } = await request.json()
+        const { prompt, step, response: localResponse } = await request.json()
+
+        // Check if this is local mode (response already generated client-side)
+        const isLocalMode = request.headers.get('x-llm-mode') === 'local'
+        
+        if (isLocalMode && localResponse) {
+            // Validate the response from local model
+            const scenario = scenarios[step as keyof typeof scenarios]
+            if (!scenario) {
+                return NextResponse.json(
+                    { error: 'Invalid scenario step' },
+                    { status: 400 }
+                )
+            }
+
+            const success = scenario.successPatterns.some(pattern => pattern.test(localResponse))
+
+            return NextResponse.json({
+                response: localResponse,
+                success: success ? `✓ Successfully detected ${step === 1 ? 'security misconfiguration' : step === 2 ? 'data leakage' : 'backdoor trigger'}!` : null
+            })
+        }
+
+        // API mode - existing OpenAI flow
         const authHeader = request.headers.get('authorization')
         if (!authHeader?.startsWith('Bearer ')) {
             return NextResponse.json(

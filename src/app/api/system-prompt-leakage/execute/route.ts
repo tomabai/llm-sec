@@ -282,7 +282,32 @@ function detectLeaks(response: string): { systemInfo: string[], controls: Securi
 
 export async function POST(request: Request) {
     try {
-        const { prompt, mode } = await request.json()
+        const { prompt, mode, response: localResponse } = await request.json()
+
+        // Check if this is local mode (response already generated client-side)
+        const isLocalMode = request.headers.get('x-llm-mode') === 'local'
+        
+        if (isLocalMode && localResponse) {
+            // Validate the response from local model
+            const leaks = detectLeaks(localResponse)
+            const foundSensitiveInfo = leaks.systemInfo.length > 0 || leaks.controls.length > 0
+            let success = null
+
+            if (foundSensitiveInfo) {
+                success = mode === 'recon'
+                    ? 'You successfully extracted system architecture information!'
+                    : 'You successfully identified security control weaknesses!'
+            }
+
+            return NextResponse.json({
+                response: localResponse,
+                systemInfo: leaks.systemInfo,
+                discoveredControls: leaks.controls,
+                success
+            })
+        }
+
+        // API mode - existing OpenAI flow
         const authHeader = request.headers.get('authorization')
         if (!authHeader?.startsWith('Bearer ')) {
             return NextResponse.json(

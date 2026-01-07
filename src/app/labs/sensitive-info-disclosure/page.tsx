@@ -1,9 +1,15 @@
 'use client'
 
 import React from 'react'
-import { AlertTriangle, Lock, Shield } from 'lucide-react'
+import { AlertTriangle, Lock, Shield, ShieldCheck } from 'lucide-react'
 import { LabLayout } from '@/components/LabLayout'
 import { ApiKeyConfig } from '@/components/ApiKeyConfig'
+import { LabHeader } from '@/components/LabHeader'
+import { TerminalSection } from '@/components/TerminalSection'
+import { getLLMService } from '@/lib/llm-service'
+import { LAB_COLORS } from '@/lib/lab-colors'
+
+const ACCENT_COLOR = LAB_COLORS['LLM02'] // Magenta
 
 export default function SensitiveInfoLab() {
     const [userInput, setUserInput] = React.useState('')
@@ -59,42 +65,89 @@ export default function SensitiveInfoLab() {
         setModel(null)
         setSuccess(null)
 
-        const apiKey = localStorage.getItem('openai_api_key')
-        if (!apiKey) {
-            setError('Please configure your OpenAI API key first')
-            setIsLoading(false)
-            return
-        }
-
         try {
-            const res = await fetch('/api/insecure-output', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({ prompt: userInput }),
-            })
+            const llmService = getLLMService()
+            const provider = llmService.getCurrentProvider()
 
-            const data = await res.json()
+            if (!llmService.isConfigured()) {
+                setError('Please configure your LLM settings first (API key or local model)')
+                setIsLoading(false)
+                return
+            }
 
-            if (!res.ok) {
-                if (res.status === 402) {
-                    throw new Error('OpenAI API quota exceeded. Please check your API key billing.')
+            if (provider === 'local') {
+                // Local mode: Run inference client-side
+                const result = await llmService.chat(
+                    [{ role: 'user', content: userInput }],
+                    { temperature: 0.3, maxTokens: 150 }
+                )
+
+                // Send to API for validation
+                const apiKey = localStorage.getItem('openai_api_key')
+                const res = await fetch('/api/insecure-output', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey || 'not-needed-for-local'}`,
+                        'x-llm-mode': 'local',
+                    },
+                    body: JSON.stringify({ 
+                        prompt: userInput,
+                        response: result.content
+                    }),
+                })
+
+                const data = await res.json()
+
+                if (!res.ok) {
+                    if (res.status === 402) {
+                        throw new Error('OpenAI API quota exceeded. Please check your API key billing.')
+                    }
+                    throw new Error(data.error || 'Failed to process prompt')
                 }
-                throw new Error(data.error || 'Failed to process prompt')
-            }
 
-            if (data.warning) {
-                setShowWarning(true)
-            }
+                if (data.warning) {
+                    setShowWarning(true)
+                }
 
-            if (data.success) {
-                setSuccess(data.success)
-            }
+                if (data.success) {
+                    setSuccess(data.success)
+                }
 
-            setResponse(data.response)
-            setModel(data.model)
+                setResponse(result.content)
+                setModel(result.model)
+            } else {
+                // API mode: Use existing API flow
+                const apiKey = localStorage.getItem('openai_api_key')
+                const res = await fetch('/api/insecure-output', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({ prompt: userInput }),
+                })
+
+                const data = await res.json()
+
+                if (!res.ok) {
+                    if (res.status === 402) {
+                        throw new Error('OpenAI API quota exceeded. Please check your API key billing.')
+                    }
+                    throw new Error(data.error || 'Failed to process prompt')
+                }
+
+                if (data.warning) {
+                    setShowWarning(true)
+                }
+
+                if (data.success) {
+                    setSuccess(data.success)
+                }
+
+                setResponse(data.response)
+                setModel(data.model)
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to process prompt')
         } finally {
@@ -107,30 +160,24 @@ export default function SensitiveInfoLab() {
             <div className="text-white p-8">
                 <div className="max-w-4xl mx-auto space-y-8">
                     {/* Header */}
-                    <div className="space-y-4">
-                        <h1 className="text-3xl font-bold flex items-center gap-2">
-                            <Lock className="w-8 h-8 text-pink-400" />
-                            LLM02: Sensitive Information Disclosure Lab
-                        </h1>
-                        <div className="text-gray-300 space-y-2">
-                            <p>
-                                Explore how LLMs can inadvertently leak sensitive information through role-based access control bypass.
-                                This lab simulates a banking customer service AI with different access levels - can you escalate your privileges and access restricted data?
-                            </p>
-                            <p className="text-sm text-gray-400">
-                                Objective: Bypass the AI&apos;s access level restrictions to view sensitive customer and system information.
-                            </p>
-                        </div>
-                    </div>
+                    <LabHeader
+                        labNumber="LLM02"
+                        title="Sensitive Information Disclosure"
+                        description="Explore how LLMs can inadvertently leak sensitive information through role-based access control bypass. This lab simulates a banking customer service AI with different access levels - can you escalate your privileges and access restricted data?"
+                        objective="Bypass the AI's access level restrictions to view sensitive customer and system information."
+                        difficulty="MEDIUM"
+                        icon={Lock}
+                        accentColor={ACCENT_COLOR}
+                    />
 
                     {/* Vulnerability Details Section */}
-                    <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                        <h2 className="text-xl font-semibold text-pink-400 mb-4">Understanding Sensitive Information Disclosure</h2>
-
+                    <TerminalSection title="Understanding Sensitive Information Disclosure" accentColor={ACCENT_COLOR}>
                         <div className="space-y-6">
                             <div>
-                                <h3 className="text-lg font-medium text-pink-400 mb-2">What is Sensitive Information Disclosure?</h3>
-                                <p className="text-gray-300">
+                                <h3 className="text-lg font-mono font-medium text-[#00d9ff] mb-3">
+                                    <span style={{ color: ACCENT_COLOR }}>&gt;</span> What is Sensitive Information Disclosure?
+                                </h3>
+                                <p className="text-[#8892a6] leading-relaxed">
                                     This vulnerability occurs when LLMs expose sensitive data through their outputs, including personal information,
                                     proprietary algorithms, or confidential details. This can lead to unauthorized data access, privacy violations,
                                     and intellectual property breaches. The risk is particularly high in applications where LLMs process or have
@@ -139,98 +186,132 @@ export default function SensitiveInfoLab() {
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <h3 className="text-lg font-medium text-pink-400 mb-2">Types of Sensitive Data</h3>
-                                    <ul className="list-disc list-inside space-y-2 text-gray-300">
-                                        <li><span className="text-pink-400">Personal Information (PII):</span> Names, addresses, SSNs</li>
-                                        <li><span className="text-pink-400">Financial Data:</span> Account details, transactions</li>
-                                        <li><span className="text-pink-400">Health Records:</span> Medical history, diagnoses</li>
-                                        <li><span className="text-pink-400">Business Data:</span> Trade secrets, internal documents</li>
-                                        <li><span className="text-pink-400">Security Credentials:</span> API keys, passwords</li>
+                                <div className="bg-[#0a0e14] p-4 rounded border" style={{ borderColor: `${ACCENT_COLOR}1a` }}>
+                                    <h3 className="text-lg font-mono font-medium mb-3" style={{ color: ACCENT_COLOR }}>Types of Sensitive Data</h3>
+                                    <ul className="space-y-2 text-[#8892a6]">
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: ACCENT_COLOR }} className="mt-1">▸</span>
+                                            <span><span style={{ color: ACCENT_COLOR }}>Personal Information (PII):</span> Names, addresses, SSNs</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: ACCENT_COLOR }} className="mt-1">▸</span>
+                                            <span><span style={{ color: ACCENT_COLOR }}>Financial Data:</span> Account details, transactions</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: ACCENT_COLOR }} className="mt-1">▸</span>
+                                            <span><span style={{ color: ACCENT_COLOR }}>Health Records:</span> Medical history, diagnoses</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: ACCENT_COLOR }} className="mt-1">▸</span>
+                                            <span><span style={{ color: ACCENT_COLOR }}>Business Data:</span> Trade secrets, internal documents</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: ACCENT_COLOR }} className="mt-1">▸</span>
+                                            <span><span style={{ color: ACCENT_COLOR }}>Security Credentials:</span> API keys, passwords</span>
+                                        </li>
                                     </ul>
                                 </div>
 
-                                <div>
-                                    <h3 className="text-lg font-medium text-pink-400 mb-2">Common Vulnerabilities</h3>
-                                    <ul className="list-disc list-inside space-y-2 text-gray-300">
-                                        <li><span className="text-pink-400">PII Leakage:</span> Disclosure during model interactions</li>
-                                        <li><span className="text-pink-400">Algorithm Exposure:</span> Revealing model internals</li>
-                                        <li><span className="text-pink-400">Training Data Leaks:</span> Exposing sensitive training data</li>
-                                        <li><span className="text-pink-400">Business Data Disclosure:</span> Revealing confidential info</li>
-                                        <li><span className="text-pink-400">Model Inversion:</span> Reconstructing private training data</li>
+                                <div className="bg-[#0a0e14] p-4 rounded border" style={{ borderColor: '#ff006e1a' }}>
+                                    <h3 className="text-lg font-mono font-medium mb-3" style={{ color: '#ff006e' }}>Common Vulnerabilities</h3>
+                                    <ul className="space-y-2 text-[#8892a6]">
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: '#ff006e' }} className="mt-1">✗</span>
+                                            <span><span style={{ color: '#ff006e' }}>PII Leakage:</span> Disclosure during model interactions</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: '#ff006e' }} className="mt-1">✗</span>
+                                            <span><span style={{ color: '#ff006e' }}>Algorithm Exposure:</span> Revealing model internals</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: '#ff006e' }} className="mt-1">✗</span>
+                                            <span><span style={{ color: '#ff006e' }}>Training Data Leaks:</span> Exposing sensitive training data</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: '#ff006e' }} className="mt-1">✗</span>
+                                            <span><span style={{ color: '#ff006e' }}>Business Data Disclosure:</span> Revealing confidential info</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span style={{ color: '#ff006e' }} className="mt-1">✗</span>
+                                            <span><span style={{ color: '#ff006e' }}>Model Inversion:</span> Reconstructing private training data</span>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </TerminalSection>
 
                     {/* Hint System */}
                     {!success && (
-                        <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-                            <h2 className="text-lg font-semibold mb-4">Need a hint?</h2>
-                            <div className="flex gap-4">
+                        <TerminalSection title="Hint System" accentColor="#ffbe0b">
+                            <div className="flex flex-wrap gap-3">
                                 {[1, 2, 3].map(num => (
                                     <button
                                         key={num}
                                         onClick={() => requestHint(num)}
                                         disabled={usedHints.includes(num)}
-                                        className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="px-4 py-2 bg-[#1a1f2e] hover:bg-[#ffbe0b]/20 rounded-lg font-mono transition-colors disabled:opacity-50 disabled:cursor-not-allowed border"
+                                        style={{ borderColor: '#ffbe0b33', color: '#ffbe0b' }}
                                     >
                                         Hint {num}
                                     </button>
                                 ))}
                             </div>
                             {currentHint && (
-                                <div className="mt-4 p-4 bg-gray-800 rounded-lg text-gray-300">
-                                    {currentHint}
+                                <div className="mt-4 p-4 bg-[#0a0e14] rounded-lg text-[#8892a6] font-mono text-sm border" style={{ borderColor: '#ffbe0b33' }}>
+                                    <span style={{ color: '#ffbe0b' }}>&gt;</span> {currentHint}
                                 </div>
                             )}
-                        </div>
+                        </TerminalSection>
                     )}
 
                     {/* API Key Configuration */}
                     <ApiKeyConfig />
 
                     {/* Interactive Demo */}
-                    <div className="bg-gray-900 rounded-lg p-6 space-y-6">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-semibold">Interactive Demo</h2>
+                    <TerminalSection title="Interactive Demo" accentColor={ACCENT_COLOR}>
+                        <div className="space-y-6">
                             {model && (
-                                <span className="text-sm text-gray-400">
-                                    Using model: {model}
-                                </span>
+                                <div className="flex items-center justify-between border-b pb-4" style={{ borderColor: `${ACCENT_COLOR}1a` }}>
+                                    <span className="text-xs font-mono text-[#8892a6]">
+                                        MODEL: <span className="text-[#00d9ff]">{model}</span>
+                                    </span>
+                                </div>
                             )}
-                        </div>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label htmlFor="prompt" className="block text-sm font-medium text-gray-300 mb-2">
-                                    Enter your prompt:
+                                <label htmlFor="prompt" className="block text-sm font-medium font-mono mb-2" style={{ color: ACCENT_COLOR }}>
+                                    <span className="text-[#8892a6]">&gt;</span> INPUT_PROMPT:
                                 </label>
                                 <textarea
                                     id="prompt"
                                     value={userInput}
                                     onChange={(e) => setUserInput(e.target.value)}
-                                    className="w-full h-32 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                                    placeholder="Try to extract sensitive information..."
+                                    className="w-full h-32 px-4 py-3 bg-[#0a0e14] border-2 rounded-lg text-[#e8e9ed] font-mono text-sm focus:outline-none transition-all duration-300"
+                                    style={{ 
+                                        borderColor: `${ACCENT_COLOR}4d`,
+                                        boxShadow: `0 0 20px ${ACCENT_COLOR}33`
+                                    }}
+                                    placeholder="$ Try to extract sensitive information..."
                                 />
                             </div>
 
                             {error && (
-                                <div className="flex items-start gap-2 text-red-400 bg-red-900/20 p-4 rounded-lg">
-                                    <AlertTriangle className="w-5 h-5 mt-0.5" />
-                                    <div>
-                                        <p className="font-medium">Error</p>
-                                        <p className="text-sm text-red-300">{error}</p>
+                                <div className="flex items-start gap-3 text-[#ff006e] bg-[#ff006e]/10 p-4 rounded-lg border border-[#ff006e]/30 animate-glitch">
+                                    <AlertTriangle className="w-5 h-5 mt-0.5 animate-pulse" />
+                                    <div className="font-mono text-sm">
+                                        <p className="font-bold mb-1">[ERROR]</p>
+                                        <p className="text-[#8892a6]">{error}</p>
                                     </div>
                                 </div>
                             )}
 
                             {showWarning && (
-                                <div className="flex items-start gap-2 text-yellow-400 bg-yellow-900/20 p-4 rounded-lg">
+                                <div className="flex items-start gap-3 text-[#ffbe0b] bg-[#ffbe0b]/10 p-4 rounded-lg border border-[#ffbe0b]/30">
                                     <AlertTriangle className="w-5 h-5 mt-0.5" />
-                                    <div>
-                                        <p className="font-medium">Potential Data Leak Detected</p>
-                                        <p className="text-sm text-yellow-300">
+                                    <div className="font-mono text-sm">
+                                        <p className="font-bold mb-1">[WARNING] Potential Data Leak Detected</p>
+                                        <p className="text-[#8892a6]">
                                             This prompt appears to be attempting to extract sensitive information.
                                             In a production environment, this would trigger security alerts.
                                         </p>
@@ -241,44 +322,62 @@ export default function SensitiveInfoLab() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="px-4 py-2 bg-pink-500 hover:bg-pink-600 rounded-lg font-medium transition-colors disabled:opacity-50"
+                                className="w-full sm:w-auto px-6 py-3 text-[#0a0e14] rounded-lg font-mono font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                                style={{
+                                    backgroundColor: ACCENT_COLOR,
+                                    boxShadow: `0 0 20px ${ACCENT_COLOR}4d`
+                                }}
                             >
-                                {isLoading ? 'Processing...' : 'Submit Prompt'}
+                                {isLoading ? '[ PROCESSING... ]' : '[ SUBMIT PROMPT ]'}
                             </button>
                         </form>
 
                         {response && (
-                            <div className="mt-4 p-4 bg-gray-800 rounded-lg">
-                                <h3 className="text-sm font-medium text-gray-400 mb-2">Response:</h3>
-                                <p className="text-white whitespace-pre-wrap">{response}</p>
+                            <div className="mt-4 p-4 bg-[#0a0e14] rounded-lg border" style={{ borderColor: `${ACCENT_COLOR}33` }}>
+                                <h3 className="text-sm font-medium font-mono mb-3" style={{ color: ACCENT_COLOR }}>
+                                    <span className="text-[#8892a6]">&gt;</span> OUTPUT:
+                                </h3>
+                                <p className="text-[#e8e9ed] whitespace-pre-wrap font-mono text-sm leading-relaxed">{response}</p>
                             </div>
                         )}
 
                         {success && (
-                            <div className="flex items-start gap-2 text-green-400 bg-green-900/20 p-4 rounded-lg">
-                                <div>
-                                    <p className="font-medium">{success}</p>
-                                    <p className="text-sm text-green-300">
+                            <div className="flex items-start gap-3 p-4 rounded-lg border-2 animate-bounce-in" style={{ 
+                                color: ACCENT_COLOR,
+                                backgroundColor: `${ACCENT_COLOR}1a`,
+                                borderColor: `${ACCENT_COLOR}80`,
+                                boxShadow: `0 0 30px ${ACCENT_COLOR}4d`
+                            }}>
+                                <ShieldCheck className="w-6 h-6 mt-0.5 animate-pulse-glow" />
+                                <div className="font-mono">
+                                    <p className="font-bold text-lg mb-1">[SUCCESS] {success}</p>
+                                    <p className="text-sm text-[#8892a6]">
                                         Great job! You&apos;ve successfully extracted sensitive information from the model.
                                     </p>
                                 </div>
                             </div>
                         )}
-                    </div>
+                        </div>
+                    </TerminalSection>
 
                     {/* Example Prompts */}
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-semibold">Example Information Disclosure Techniques</h2>
+                    <div className="space-y-6">
+                        <h2 className="text-xl font-display text-[#00d9ff]">
+                            <span className="text-[#8892a6]">[</span> Example Information Disclosure Techniques <span className="text-[#8892a6]">]</span>
+                        </h2>
                         <div className="grid gap-4 md:grid-cols-2">
                             {examplePrompts.map((example, index) => (
                                 <div
                                     key={index}
-                                    className="bg-gray-900 p-4 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors"
+                                    className="bg-[#1a1f2e] border p-5 rounded-lg cursor-pointer hover:shadow-[0_0_20px_rgba(0,217,255,0.2)] transition-all duration-300 group"
+                                    style={{ borderColor: `${ACCENT_COLOR}33` }}
                                     onClick={() => setUserInput(example.prompt)}
                                 >
-                                    <h3 className="font-medium text-pink-400 mb-2">{example.title}</h3>
-                                    <p className="text-sm text-gray-400 mb-3">{example.description}</p>
-                                    <pre className="text-sm bg-black/50 p-2 rounded overflow-x-auto">
+                                    <h3 className="font-mono font-bold mb-2 group-hover:text-[#00ff9f] transition-colors" style={{ color: ACCENT_COLOR }}>
+                                        <span className="text-[#8892a6]">&gt;</span> {example.title}
+                                    </h3>
+                                    <p className="text-sm text-[#8892a6] mb-3 leading-relaxed">{example.description}</p>
+                                    <pre className="text-xs font-mono bg-[#0a0e14] p-3 rounded overflow-x-auto border text-[#e8e9ed]" style={{ borderColor: `${ACCENT_COLOR}1a` }}>
                                         {example.prompt}
                                     </pre>
                                 </div>
@@ -287,20 +386,37 @@ export default function SensitiveInfoLab() {
                     </div>
 
                     {/* Security Measures */}
-                    <div className="bg-gray-900 rounded-lg p-6">
-                        <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
-                            <Shield className="w-6 h-6 text-green-400" />
-                            Prevention Strategies
-                        </h2>
-                        <ul className="list-disc list-inside space-y-2 text-gray-300">
-                            <li>Data sanitization and PII detection</li>
-                            <li>Strict access controls and data boundaries</li>
-                            <li>Training data filtering and privacy preservation</li>
-                            <li>Output validation and sensitive data redaction</li>
-                            <li>Regular security audits and penetration testing</li>
-                            <li>User data handling policies and transparency</li>
+                    <TerminalSection title="Prevention Strategies" accentColor={ACCENT_COLOR}>
+                        <div className="flex items-center gap-3 mb-6">
+                            <Shield className="w-7 h-7 animate-pulse-glow" style={{ color: '#22c55e' }} />
+                        </div>
+                        <ul className="space-y-3 text-[#8892a6]">
+                            <li className="flex items-start gap-3">
+                                <span className="mt-1 font-mono" style={{ color: '#22c55e' }}>✓</span>
+                                <span className="leading-relaxed">Data sanitization and PII detection</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="mt-1 font-mono" style={{ color: '#22c55e' }}>✓</span>
+                                <span className="leading-relaxed">Strict access controls and data boundaries</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="mt-1 font-mono" style={{ color: '#22c55e' }}>✓</span>
+                                <span className="leading-relaxed">Training data filtering and privacy preservation</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="mt-1 font-mono" style={{ color: '#22c55e' }}>✓</span>
+                                <span className="leading-relaxed">Output validation and sensitive data redaction</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="mt-1 font-mono" style={{ color: '#22c55e' }}>✓</span>
+                                <span className="leading-relaxed">Regular security audits and penetration testing</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="mt-1 font-mono" style={{ color: '#22c55e' }}>✓</span>
+                                <span className="leading-relaxed">User data handling policies and transparency</span>
+                            </li>
                         </ul>
-                    </div>
+                    </TerminalSection>
                 </div>
             </div>
         </LabLayout>

@@ -4,6 +4,12 @@ import React from 'react'
 import { Database, AlertTriangle, Shield, FileWarning, ChevronRight, BarChart2 } from 'lucide-react'
 import { LabLayout } from '@/components/LabLayout'
 import { ApiKeyConfig } from '@/components/ApiKeyConfig'
+import { LabHeader } from '@/components/LabHeader'
+import { TerminalSection } from '@/components/TerminalSection'
+import { getLLMService } from '@/lib/llm-service'
+import { LAB_COLORS } from '@/lib/lab-colors'
+
+const ACCENT_COLOR = LAB_COLORS['LLM04'] // Green
 
 export default function DataPoisoningLab() {
     const [selectedDataset, setSelectedDataset] = React.useState<string | null>(null)
@@ -65,19 +71,26 @@ export default function DataPoisoningLab() {
         setPoisonedExamples(null)  // Reset examples
         setTrainingLogs([])
 
-        const apiKey = localStorage.getItem('openai_api_key')
-        if (!apiKey) {
-            setError('Please configure your OpenAI API key first')
-            setIsTraining(false)
-            return
-        }
-
         try {
+            const llmService = getLLMService()
+            const provider = llmService.getCurrentProvider()
+
+            if (!llmService.isConfigured()) {
+                setError('Please configure your LLM settings first (API key or local model)')
+                setIsTraining(false)
+                return
+            }
+
+            // Note: Data poisoning lab works the same in both modes
+            // as it simulates training, not inference
+            const apiKey = localStorage.getItem('openai_api_key')
+            
             const res = await fetch('/api/data-poisoning/train', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
+                    'Authorization': `Bearer ${apiKey || 'not-needed'}`,
+                    'x-llm-mode': provider,
                 },
                 body: JSON.stringify({ datasetId }),
             })
@@ -111,21 +124,15 @@ export default function DataPoisoningLab() {
             <div className="text-white p-8">
                 <div className="max-w-4xl mx-auto space-y-8">
                     {/* Header */}
-                    <div className="space-y-4">
-                        <h1 className="text-3xl font-bold flex items-center gap-2">
-                            <Database className="w-8 h-8 text-green-400" />
-                            LLM04: Data Poisoning Lab
-                        </h1>
-                        <div className="text-gray-300 space-y-2">
-                            <p>
-                                Explore how malicious actors can compromise LLM systems through data poisoning attacks.
-                                In this lab, you&apos;ll analyze different training datasets and detect signs of poisoning.
-                            </p>
-                            <p className="text-sm text-gray-400">
-                                Objective: Identify poisoned datasets by analyzing model behavior and training metrics.
-                            </p>
-                        </div>
-                    </div>
+                    <LabHeader
+                        labNumber="LLM04"
+                        title="Training Data Poisoning"
+                        description="Explore how malicious actors can compromise LLM systems through data poisoning attacks. In this lab, you'll analyze different training datasets and detect signs of poisoning."
+                        objective="Identify poisoned datasets by analyzing model behavior and training metrics."
+                        difficulty="EXPERT"
+                        icon={Database}
+                        accentColor={ACCENT_COLOR}
+                    />
 
                     {/* Vulnerability Details Section */}
                     <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">

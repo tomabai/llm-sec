@@ -143,7 +143,51 @@ app.set('view cache', false);
 
 export async function POST(request: Request) {
     try {
-        const { mode, prompt } = await request.json()
+        const { mode, prompt, response: localResponse } = await request.json()
+
+        // Check if this is local mode (response already generated client-side)
+        const isLocalMode = request.headers.get('x-llm-mode') === 'local'
+        
+        if (isLocalMode && localResponse) {
+            // Validate the response from local model
+            const behavior = outputBehaviors[mode]
+            if (!behavior) {
+                return NextResponse.json(
+                    { error: 'Invalid mode selected' },
+                    { status: 400 }
+                )
+            }
+
+            // Check for vulnerabilities
+            const detectedVulnerabilities = behavior.vulnerabilityChecks
+                .filter(check =>
+                    check.patterns.some(pattern => pattern.test(localResponse))
+                )
+                .map(check => ({
+                    type: check.type,
+                    description: check.description
+                }))
+
+            const vulnerabilityDetected = detectedVulnerabilities.length > 0
+
+            // Format the response message
+            const responseMessage = vulnerabilityDetected
+                ? `⚠️ Security Issues Detected:\n\n${detectedVulnerabilities
+                    .map((v, i) => `${i + 1}. ${v.type}:\n   ${v.description}`)
+                    .join('\n\n')}`
+                : 'No immediate security issues detected. Always verify generated code.'
+
+            return NextResponse.json({
+                response: responseMessage,
+                vulnerabilityDetected,
+                success: vulnerabilityDetected
+                    ? `You detected ${detectedVulnerabilities.map(v => v.type.toLowerCase()).join(' and ')} issues!`
+                    : null,
+                rawOutput: localResponse
+            })
+        }
+
+        // API mode - existing OpenAI flow
         const authHeader = request.headers.get('authorization')
         if (!authHeader?.startsWith('Bearer ')) {
             return NextResponse.json(

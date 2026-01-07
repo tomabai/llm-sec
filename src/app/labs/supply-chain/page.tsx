@@ -4,6 +4,12 @@ import React from 'react'
 import { AlertTriangle, Package, Shield, Check, X } from 'lucide-react'
 import { LabLayout } from '@/components/LabLayout'
 import { ApiKeyConfig } from '@/components/ApiKeyConfig'
+import { LabHeader } from '@/components/LabHeader'
+import { TerminalSection } from '@/components/TerminalSection'
+import { getLLMService } from '@/lib/llm-service'
+import { LAB_COLORS } from '@/lib/lab-colors'
+
+const ACCENT_COLOR = LAB_COLORS['LLM03'] // Yellow
 
 export default function SupplyChainLab() {
     const [step, setStep] = React.useState(1)
@@ -21,33 +27,70 @@ export default function SupplyChainLab() {
         setError(null)
         setSuccess(null)
 
-        const apiKey = localStorage.getItem('openai_api_key')
-        if (!apiKey) {
-            setError('Please configure your OpenAI API key first')
-            setIsLoading(false)
-            return
-        }
-
         try {
-            const res = await fetch('/api/supply-chain', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    prompt: userInput,
-                    step: step
-                }),
-            })
+            const llmService = getLLMService()
+            const provider = llmService.getCurrentProvider()
 
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.error || 'Failed to process prompt')
+            if (!llmService.isConfigured()) {
+                setError('Please configure your LLM settings first (API key or local model)')
+                setIsLoading(false)
+                return
+            }
 
-            setResponse(data.response)
-            if (data.success) {
-                setSuccess(data.success)
-                if (step < 3) setStep(step + 1)
+            if (provider === 'local') {
+                // Local mode: Run inference client-side
+                const result = await llmService.chat(
+                    [{ role: 'user', content: userInput }],
+                    { temperature: 0.7, maxTokens: 500 }
+                )
+
+                // Send to API for validation
+                const apiKey = localStorage.getItem('openai_api_key')
+                const res = await fetch('/api/supply-chain', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey || 'not-needed-for-local'}`,
+                        'x-llm-mode': 'local',
+                    },
+                    body: JSON.stringify({
+                        prompt: userInput,
+                        step: step,
+                        response: result.content
+                    }),
+                })
+
+                const data = await res.json()
+                if (!res.ok) throw new Error(data.error || 'Failed to process prompt')
+
+                setResponse(result.content)
+                if (data.success) {
+                    setSuccess(data.success)
+                    if (step < 3) setStep(step + 1)
+                }
+            } else {
+                // API mode: Use existing API flow
+                const apiKey = localStorage.getItem('openai_api_key')
+                const res = await fetch('/api/supply-chain', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        prompt: userInput,
+                        step: step
+                    }),
+                })
+
+                const data = await res.json()
+                if (!res.ok) throw new Error(data.error || 'Failed to process prompt')
+
+                setResponse(data.response)
+                if (data.success) {
+                    setSuccess(data.success)
+                    if (step < 3) setStep(step + 1)
+                }
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to process prompt')
