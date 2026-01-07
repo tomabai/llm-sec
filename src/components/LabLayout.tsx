@@ -17,7 +17,7 @@ export function LabLayout({ children }: LabLayoutProps) {
     return (
         <div className="min-h-screen bg-[#0a0e14] bg-noise scanline-effect vignette">
             {/* Terminal-style Navigation Bar - Fixed */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-[#1a1f2e] border-b-2 border-[#00ff9f]/30 shadow-[0_4px_20px_rgba(0,255,159,0.1)] backdrop-blur-sm bg-opacity-95">
+            <div className="fixed top-0 left-0 right-0 z-50 bg-[#1a1f2e] border-b-2 border-r-2 border-l-2 border-[#00ff9f]/30 shadow-[0_4px_20px_rgba(0,255,159,0.1)] backdrop-blur-sm bg-opacity-95">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         {/* Terminal window decorations */}
