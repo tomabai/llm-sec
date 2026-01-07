@@ -10,6 +10,7 @@ import { LAB_COLORS } from '@/lib/lab-colors'
 export function LabSidebar() {
   const pathname = usePathname()
   const [progress, setProgress] = React.useState(() => getLabProgress())
+  const [footerHeight, setFooterHeight] = React.useState(0)
 
   React.useEffect(() => {
     const handleProgressUpdate = () => {
@@ -20,8 +21,26 @@ export function LabSidebar() {
     return () => window.removeEventListener('lab-progress-updated', handleProgressUpdate)
   }, [])
 
+  React.useEffect(() => {
+    // Measure footer height
+    const updateFooterHeight = () => {
+      const footer = document.querySelector('footer')
+      if (footer) {
+        setFooterHeight(footer.offsetHeight)
+      }
+    }
+
+    updateFooterHeight()
+    window.addEventListener('resize', updateFooterHeight)
+    
+    return () => window.removeEventListener('resize', updateFooterHeight)
+  }, [])
+
   return (
-    <div className="fixed left-0 top-16 w-64 bg-[#1a1f2e] border-r-2 border-b-2 border-[#00ff9f]/30 overflow-y-auto z-40 backdrop-blur-sm bg-opacity-95" style={{ bottom: '80px' }}>
+    <div 
+      className="fixed left-0 top-16 w-64 bg-[#1a1f2e] border-r-2 border-b-2 border-[#00ff9f]/30 overflow-y-auto z-40 backdrop-blur-sm bg-opacity-95"
+      style={{ bottom: `${footerHeight}px` }}
+    >
       {/* Sidebar Header */}
       <div className="p-4 border-b border-[#00ff9f]/20">
         <div className="flex items-center gap-2 text-[#00ff9f] font-mono text-sm mb-2">
