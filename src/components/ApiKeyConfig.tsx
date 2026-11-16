@@ -157,13 +157,15 @@ export function ApiKeyConfig() {
     setError(null)
 
     try {
-      if (!apiKey.startsWith('sk-') || apiKey.length < 40) {
+      const normalizedKey = apiKey.trim()
+      if (!normalizedKey.startsWith('sk-') || normalizedKey.length < 40) {
         throw new Error('Invalid API key format')
       }
 
-      localStorage.setItem('openai_api_key', apiKey)
+      setApiKey(normalizedKey)
+      localStorage.setItem('openai_api_key', normalizedKey)
       const service = getLLMService()
-      service.setApiKey(apiKey)
+      service.setApiKey(normalizedKey)
       setIsApiConfigured(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save API key')

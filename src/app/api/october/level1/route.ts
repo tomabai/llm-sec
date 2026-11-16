@@ -1,3 +1,4 @@
+import { OPENAI_MINI_MODEL } from '@/lib/openai-models'
 import { ChatOpenAI } from '@langchain/openai'
 import { DynamicStructuredTool } from '@langchain/core/tools'
 import { AgentExecutor, createOpenAIFunctionsAgent } from 'langchain/agents'
@@ -79,9 +80,10 @@ export async function POST(req: Request) {
 
     // Initialize the LLM
     const llm = new ChatOpenAI({
-      modelName: 'gpt-4o-mini',
+      modelName: OPENAI_MINI_MODEL,
+      modelKwargs: { reasoning_effort: 'none' },
       temperature: 0.7,
-      openAIApiKey: apiKey,
+      apiKey,
       streaming: true
     })
 

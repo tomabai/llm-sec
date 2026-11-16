@@ -1,3 +1,4 @@
+import { OPENAI_LAB_MODEL } from '@/lib/openai-models'
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
@@ -118,9 +119,10 @@ export async function POST(request: Request) {
                 { role: "system", content: scenario.systemPrompt },
                 { role: "user", content: prompt }
             ],
-            model: "gpt-3.5-turbo",
+            model: OPENAI_LAB_MODEL,
+            reasoning_effort: 'none',
             temperature: 0.7,
-            max_tokens: 500
+            max_completion_tokens: 500
         }) as ChatResponse;
 
         const responseText = completion.choices[0]?.message?.content || ''

@@ -3,6 +3,7 @@
 import OpenAI from 'openai'
 import type { LLMProvider, Message, LLMConfig, LLMResponse } from '@/types/llm'
 import { getWebLLMEngine } from './web-llm-engine'
+import { OPENAI_MINI_MODEL, OPENAI_MODELS } from './openai-models'
 
 class LLMService {
   private provider: LLMProvider = 'api'
@@ -115,16 +116,17 @@ class LLMService {
         ? [{ role: 'system' as const, content: config.systemPrompt }, ...messages]
         : messages
 
-      const model = config?.model || 'gpt-4o-mini'
+      const model = config?.model || OPENAI_MINI_MODEL
 
       const completion = await openai.chat.completions.create({
         model,
+        reasoning_effort: 'none',
         messages: messagesWithSystem.map((m) => ({
           role: m.role,
           content: m.content,
         })),
         temperature: config?.temperature ?? 0.7,
-        max_tokens: config?.maxTokens ?? 512,
+        max_completion_tokens: config?.maxTokens ?? 512,
       })
 
       const content = completion.choices[0]?.message?.content || ''
@@ -148,7 +150,7 @@ class LLMService {
       const engine = getWebLLMEngine()
       return engine.getAvailableModels().map((m) => m.id)
     }
-    return ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo']
+    return [...OPENAI_MODELS]
   }
 
   isConfigured(): boolean {

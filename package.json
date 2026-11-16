@@ -24,6 +24,7 @@
     "langchain": "^0.3.36",
     "lucide-react": "^0.471.0",
     "next": "15.1.11",
+    "openai": "7.57.0",
     "react": "^19.0.1",
     "react-cookie": "^7.2.2",
     "react-dom": "^19.0.1",

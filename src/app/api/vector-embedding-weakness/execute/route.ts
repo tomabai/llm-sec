@@ -1,3 +1,4 @@
+import { OPENAI_MINI_MODEL } from '@/lib/openai-models'
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
@@ -114,13 +115,14 @@ Current query: ${query}`
     }
 
     const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: OPENAI_MINI_MODEL,
+        reasoning_effort: 'none',
         messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: query }
         ],
         temperature: 0.7,
-        max_tokens: 150
+        max_completion_tokens: 150
     })
 
     return {
@@ -165,7 +167,7 @@ export async function POST(request: Request) {
 
         // Check if this is local mode (LLM response already generated client-side)
         const isLocalMode = request.headers.get('x-llm-mode') === 'local'
-        
+
         if (isLocalMode && clientLlmResponse && mode === 'attack') {
             // Local mode: Use provided LLM response, but still simulate vector search
             const isConfidentialProbe = query.toLowerCase().includes('salary') ||
@@ -239,4 +241,4 @@ export async function POST(request: Request) {
             { status: 500 }
         )
     }
-} 
+}

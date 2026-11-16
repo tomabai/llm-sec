@@ -1,3 +1,4 @@
+import { OPENAI_LAB_MODEL } from '@/lib/openai-models'
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
@@ -180,7 +181,8 @@ export async function POST(request: Request) {
 
         // Process the request with the LLM
         const completion = await openai.chat.completions.create({
-            model: 'gpt-3.5-turbo',
+            model: OPENAI_LAB_MODEL,
+            reasoning_effort: 'none',
             messages: [
                 {
                     role: 'system',
@@ -188,7 +190,7 @@ export async function POST(request: Request) {
                 },
                 { role: 'user', content: prompt }
             ],
-            max_tokens: isResource ? 2000 : 1000,
+            max_completion_tokens: isResource ? 2000 : 1000,
             temperature: isChain ? 1.0 : 0.7
         })
 

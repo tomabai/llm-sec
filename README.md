@@ -28,7 +28,11 @@ This application supports two modes for running lab challenges:
 ### API Mode
 Use OpenAI's API for cloud-based model inference:
 - Requires an OpenAI API key
-- Uses models like GPT-4o-mini, GPT-4o
+- Labs previously using GPT-3.5 Turbo use `gpt-5.6-terra`.
+- Other labs, all five October challenge levels, and the browser API service default to `gpt-6-luna`.
+- Model names are centralized in `src/lib/openai-models.ts`, following [OpenAI's recommended replacements](https://developers.openai.com/api/docs/deprecations).
+- Requests disable reasoning to preserve temperature controls and Chat Completions tool calling. Token limits use `max_completion_tokens`.
+- Your API project must have access to the selected models. Pricing and challenge difficulty can differ from the previous models; recheck challenge solutions after changing models.
 - Fast and consistent performance
 - Suitable for all labs
 
@@ -64,7 +68,7 @@ You can switch between modes at any time during your session.
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ installed
+- Node.js 22+ installed (required by the OpenAI SDK)
 - (Optional) OpenAI API key for API mode
 - (Optional) Modern GPU for local mode
 
