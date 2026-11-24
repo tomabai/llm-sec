@@ -21,6 +21,10 @@ export function Footer() {
                     <Link href="/terms" className="hover:text-cyan-400 transition-colors">
                         Terms & API Usage
                     </Link>
+                    <span className="text-gray-600">|</span>
+                    <Link href="/faq" className="hover:text-cyan-400 transition-colors">
+                        FAQ
+                    </Link>
                 </div>
 
                 {/* Community Message */}
@@ -49,4 +53,4 @@ export function Footer() {
             </div>
         </footer>
     )
-} 
+}

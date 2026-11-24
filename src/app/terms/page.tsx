@@ -112,8 +112,8 @@ export default function Terms() {
                             <p className="text-lg">Important information about API keys and data handling:</p>
                             <ul className="list-disc list-inside space-y-3 text-gray-300" role="list">
                                 <li><strong>Local Storage Only:</strong> Your API keys are stored exclusively in your browser&apos;s local storage</li>
-                                <li><strong>No Server Storage:</strong> We never store, log, or transmit your API keys to our servers</li>
-                                <li><strong>Direct API Calls:</strong> Keys are only used for direct API calls to OpenAI for lab exercises</li>
+                                <li><strong>API Requests:</strong> In API mode, lab requests can send your key to this application&apos;s server routes in an Authorization header so they can call OpenAI</li>
+                                <li><strong>Browser API Service:</strong> The shared browser API service can also call OpenAI directly with your key</li>
                                 <li><strong>Key Validation:</strong> We validate your key format before saving (must start with &apos;sk-&apos; and be at least 40 characters)</li>
                                 <li><strong>Easy Removal:</strong> Keys are cleared when you use the &ldquo;Reset API key&rdquo; option</li>
                                 <li><strong>Best Practices:</strong> We recommend using test API keys with usage limits for enhanced security</li>

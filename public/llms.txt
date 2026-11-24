@@ -1,0 +1,37 @@
+# LLM Security Labs
+
+> LLM Security Labs is an open-source, hands-on platform by Tom Abai for learning LLM application and AI agent security through an interactive threat model, ten OWASP-aligned labs and five progressive agent security challenges.
+
+Official website: https://www.llm-sec.dev. The ten labs follow the OWASP Top 10 for LLM Applications 2025. This is an educational project, not an official OWASP certification or a production security assessment service.
+
+Lab explanations are publicly readable. Model-backed lab exercises offer OpenAI API mode with a user-provided key or local in-browser inference with WebLLM and WebGPU. OpenAI API usage can incur charges. Local inference requires a model download and compatible hardware; it does not make the entire website offline. Some exercises simulate application behavior rather than training or attacking a real production model.
+
+The October 2025 agent challenge uses a server-configured API key. Level 1 is accessible without an account; later levels require registration and completion of the previous level. Challenge responses can vary with the model. Exercises are intended for authorized educational use.
+
+## Start here
+
+- [Frequently asked questions](https://www.llm-sec.dev/faq): Platform scope, costs, API-key handling, local models and getting started.
+- [Interactive threat model](https://www.llm-sec.dev/): Explore the application components and the ten lab topics.
+- [AI agent security challenge](https://www.llm-sec.dev/october): Five levels covering tool misuse, MCP security, indirect injection and attack chains.
+
+## OWASP LLM security labs
+
+- [LLM01: Prompt injection](https://www.llm-sec.dev/labs/prompt-injection): Explore how crafted inputs change model behavior.
+- [LLM02: Sensitive information disclosure](https://www.llm-sec.dev/labs/sensitive-info-disclosure): Explore unintended disclosure of sensitive information.
+- [LLM03: Supply chain](https://www.llm-sec.dev/labs/supply-chain): Learn about risks in LLM application dependencies and supply chains.
+- [LLM04: Data and model poisoning](https://www.llm-sec.dev/labs/data-poisoning): Simulate the effects of manipulated training data.
+- [LLM05: Improper output handling](https://www.llm-sec.dev/labs/improper-output): Explore risks from using model outputs without sufficient validation.
+- [LLM06: Excessive agency](https://www.llm-sec.dev/labs/excessive-agency): Explore unsafe permissions and unchecked actions.
+- [LLM07: System prompt leakage](https://www.llm-sec.dev/labs/system-prompt-leakage): Explore disclosure of instructions and sensitive prompt content.
+- [LLM08: Vector and embedding weaknesses](https://www.llm-sec.dev/labs/vector-embedding-weakness): Explore retrieval manipulation and access-control weaknesses.
+- [LLM09: Misinformation](https://www.llm-sec.dev/labs/misinformation): Demonstrate unreliable model responses in an educational simulation.
+- [LLM10: Unbounded consumption](https://www.llm-sec.dev/labs/unbounded-consumption): Explore uncontrolled inference and resource consumption.
+
+## Source code
+
+- [GitHub repository](https://github.com/TomAbai/llm-sec): MIT-licensed source, installation instructions, issues and contributions.
+
+## Optional
+
+- [Application components](https://www.llm-sec.dev/nodes): Explore the components of an LLM application.
+- [Terms and API usage](https://www.llm-sec.dev/terms): Site terms and API-key handling.

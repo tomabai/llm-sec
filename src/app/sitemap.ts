@@ -57,6 +57,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.3,
         },
         ...labPages,
+        {
+            url: `${baseUrl}/faq`,
+            lastModified: new Date('2026-11-24'),
+            changeFrequency: 'monthly',
+            priority: 0.7,
+        },
         ...nodePages,
     ]
-} 
+}
